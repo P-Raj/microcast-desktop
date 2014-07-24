@@ -1,19 +1,23 @@
 
-
 def getPeers():
-	pass
+    pass
+
 
 def getAPeer():
-	pass
+    pass
+
 
 def leastBusyPeer():
-	pass
+    pass
+
 
 def getBackLog(peer):
-	pass
+    pass
+
 
 def addBackLog(peer):
-	pass
+    pass
+
 
 def removeBackLog(peer):
-	pass
+    pass

@@ -5,21 +5,21 @@ MAX_BACKLOG = 5
 
 while not Segments.allAssigned():
 
-	peer = Peers.leastBusyPeer()
+    peer = Peers.leastBusyPeer()
 
-	peerBackLog = Peers.getBackLog(peer)
+    peerBackLog = Peers.getBackLog(peer)
 
-	if peerBackLog < MAX_BACKLOG:
-		requestSegment = Segments.getNext()
-		Connection.sendDownloadRequest(peer, requestSegment)
-		Peers.addBackLog(peer, requestSegment)
-	
-	else:
-		feedback = Connection.waitForFeedback()
+    if peerBackLog < MAX_BACKLOG:
+        requestSegment = Segments.getNext()
+        Connection.sendDownloadRequest(peer, requestSegment)
+        Peers.addBackLog(peer, requestSegment)
 
-	Peers.removeBackLog(peer, feedback["segment"])
+    else:
+        feedback = Connection.waitForFeedback()
 
-	if feedback["Status"] == "Failure":
-		requestSegment = Segments.getNext()
-		Connection.sendDownloadRequest(feedback["from"], requestSegment)
-		Segments.add(feedback["segment"])
+    Peers.removeBackLog(peer, feedback["segment"])
+
+    if feedback["Status"] == "Failure":
+        requestSegment = Segments.getNext()
+        Connection.sendDownloadRequest(feedback["from"], requestSegment)
+        Segments.add(feedback["segment"])

@@ -2,12 +2,14 @@
 
 metadata = None
 
-def downloadMetadata(url = None):
-	pass
 
-def downloadSegment(segmentId = None):
-	pass
+def downloadMetadata(url=None):
+    pass
+
+
+def downloadSegment(segmentId=None):
+    pass
+
 
 def allAssigned():
-	pass
-
+    pass
