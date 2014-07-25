@@ -4,6 +4,11 @@ class Communicator:
 	def __init__(self, commWorld):
 		self.commWorld = commWorld
 
+	def setupCommunicator(self):
+        commWorld = MPI.COMM_WORLD
+        self.totalProc = commWorld.Get_size()
+        self.procId = commWorld.Get_rank()   
+
 	def setupChannel(numProcs):
 		pass
 
@@ -17,4 +22,16 @@ class Communicator:
 		pass
 
 	def broadcast(from):
+		pass
+
+	def sendDownloadRequest():
+		pass
+
+	def sendSegment():
+		pass
+
+	def requestSegment():
+		pass
+
+	def waitForFeedback():
 		pass

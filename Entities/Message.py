@@ -1,20 +1,29 @@
 
 class Message:
 
-    def __init__(self):
+    def __init__(self, procId, messageId = -1):
+        self.sender = procId
+        self.messageId = messageId
+
+    def initMessage(self, msgProperty, msgContent):
+        self.property = msgProperty
+        self.content = msgContent
+
+    def isPacket(self):
         pass
 
-    def isPacket():
+    def isSegment(self):
         pass
 
-    def isSegment():
+    def isAdvertisement(self):
         pass
 
-    def isAdvertisement():
+    def isRequest(self):
         pass
 
-    def isRequest():
+    def isDimensionOfSegment(self):
         pass
 
-    def isDimensionOfSegment():
-        pass
+    def initContents(self):
+
+

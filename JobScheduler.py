@@ -6,20 +6,11 @@ SegmentAssignProcId = 0
 
 class JobScheduler:
 
-    def __init__(self, name="default"):
-        self.name = name
-        self.setUpEnvironment()
-
-    def setUpEnvironment(self):
-        self.setupCommunicator()
-
-    def setupCommunicator(self):
-        commWorld = MPI.COMM_WORLD
-        self.totalProc = commWorld.Get_size()
-        self.procId = commWorld.Get_rank()   
+    def __init__(self, environment):
+        self.environment = environment   
 
     def isSegmentAssigner(self):
-    	return self.procId == SegmentAssignProcId
+    	return self.environment.procId == SegmentAssignProcId
 
 	def runMicroDownload(self):
 		if self.isSegmentAssigner():
