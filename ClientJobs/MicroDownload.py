@@ -1,5 +1,5 @@
 import Peers
-import Segments
+import SegmentHandler as Segments
 
 MAX_BACKLOG = 5
 
@@ -7,21 +7,22 @@ def microDownload():
 
 	while not Segments.allAssigned():
 
-	    peer = Peers.leastBusyPeer()
+	    peerId = Peers.leastBusyPeer()
 
-	    peerBackLog = Peers.getBackLog(peer)
+	    peerBackLog = Peers.getBackLog(peerId)
 
 	    if peerBackLog < MAX_BACKLOG:
-	        requestSegment = Segments.getNext()
-	        Connection.sendDownloadRequest(peer, requestSegment)
-	        Peers.addBackLog(peer, requestSegment)
+	        requestSegment = Segments.getNextUnassigned()
+	        Connection.sendDownloadRequest(peerId, requestSegment)
+	        Segments.assignSegment(feedback["segment"]["id"])
+	        Peers.addBackLog(peerId, requestSegment)
 
 	    else:
 	        feedback = Connection.waitForFeedback()
 
-	    Peers.removeBackLog(peer, feedback["segment"])
+	    Peers.removeBackLog(peerId, feedback["segment"])
 
 	    if feedback["Status"] == "Failure":
-	        requestSegment = Segments.getNext()
+	        requestSegment = Segments.getNextUnassigned()
 	        Connection.sendDownloadRequest(feedback["from"], requestSegment)
-	        Segments.add(feedback["segment"])
+	        Segments.assignSegment(feedback["segment"]["id"])

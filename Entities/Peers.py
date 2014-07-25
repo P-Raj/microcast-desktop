@@ -1,19 +1,23 @@
+import random
+peers = None
 
 
-def getPeers():
-	pass
+def initPeers(numPeers):
+	#initializes peers
+	peers = dict([(peerId, []) for peerId in range(numPeers)])
 
 def getAPeer():
-	pass
+	return random.choice(peers.keys())
+
 
 def leastBusyPeer():
-	pass
+	return min(peers, key=peers.get)
 
-def getBackLog(peer):
-	pass
+def getBackLog(peerId):
+	return peers[peerId]
 
-def addBackLog(peer):
-	pass
+def addBackLog(peerId):
+	peers[peerId] += 1
 
 def removeBackLog(peer):
-	pass
+	peers[peerId] -= 1

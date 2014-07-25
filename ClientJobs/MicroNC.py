@@ -12,8 +12,8 @@ def microNC():
 	    if message.isSegment():
 	        if message.requestedByMe():
 	            # Send segment to a neighbor
-	            peer = Peers.getAPeer()
-	            Connection.sendSegment(peer, message)
+	            peerId = Peers.getAPeer()
+	            Connection.sendSegment(peerId, message)
 	        toBeAdvertised.append(message)
 
 	    if message.isPacket():
