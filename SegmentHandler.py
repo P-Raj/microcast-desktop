@@ -34,11 +34,11 @@ def downloadMetadata(url=None):
 
 def downloadSegment(segmentId):
 	global metadata
-    time.sleep(metadata[segmentId])
+	time.sleep(metadata[segmentId])
 
 def allAssigned():
 	global segmentAssignList
-    return all(segmentAssignList)
+	return all(segmentAssignList)
 
 def assignSegment(segmentId):
 	global segmentAssignList

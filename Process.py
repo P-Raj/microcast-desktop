@@ -5,13 +5,14 @@ from Queues import LocalQueue
 
 # set up the distributed environment
 environment = Communicator()
+processId = environment.getMyId()
 
-#set up local queues
-advts = LocalQueue()
-requests = LocalQueue()
+# prints the details of the environemnt
+environment.informClient()
+
 
 # set up job scheduler
 procJobScheduler = JobScheduler(environment)
 
-procJobScheduler.runMicroDownload(advts, requests)
-procJobScheduler.runMicroNC(advts, requests)
+procJobScheduler.runMicroDownload()
+procJobScheduler.runMicroNC()

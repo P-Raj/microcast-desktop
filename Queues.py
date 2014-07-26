@@ -3,8 +3,7 @@
 import Queue
 
 class LocalQueue:
-	def __init__(self, name):
-		self.name = name
+	def __init__(self):
 		self.queue = Queue.Queue()
 
 	def add(message):
@@ -14,6 +13,3 @@ class LocalQueue:
 		if self.queue.empty():
 			return None
 		return self.queue.get()
-
-
-
