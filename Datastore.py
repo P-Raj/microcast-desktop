@@ -9,26 +9,25 @@ class Datastore:
 
     def __init__(self, filename, meta):
         self.downloadedSegments = {}
-	self.filename = filename
+        self.filename = filename
         self.bufferSize =  10 #number of segments downloaded before storing
         self.buffer = []
-	self.meta = meta
-	self.createFile()
+        self.meta = meta
+        self.createFile()
 
     def createFile(self):
-	with open(self.filename,"w") as fp:
-		fp.write("X"*self.meta["size"])
+        with open(self.filename,"w") as fp:
+            fp.write("X"*self.meta["size"])
 
 
     def store(self, forceStore=False):
 
         if len(self.buffer) == self.bufferSize or forceStore:
             for msg in self.buffer:
-		startFrom = self.meta["Segments"][str(msg[0])]
-		with open(self.filename,"a") as fp:
-			fp.seek(startFrom)
-			fp.write(msg[1])
-		
+                startFrom = self.meta["Segments"][str(msg[0])]
+                with open(self.filename,"a") as fp:
+                    fp.seek(startFrom)
+                    fp.write(msg[1])
             self.buffer = []
             # emptying the buffer
 
