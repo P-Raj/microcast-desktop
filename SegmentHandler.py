@@ -7,23 +7,25 @@ import random
 
 
 
-""" self.metadata fields
-~~~~~~~~~~~~~~~~~~~~~~
-{
-	numSegments :  N,
-	1 : {
-			segmentDownloadtime: K0, 
-			segmentFrom : K1, 
-			segmentTo : K2
-		}
-	.......
-}
-"""
+
 class SegmentHandler:
 
 	def __init__(self):
 		self.metadata = None
 		self.segmentAssignList = []
+		""" 
+			self.metadata fields
+			~~~~~~~~~~~~~~~~~~~~~~
+			{
+				numSegments :  N,
+				1 : {
+						segmentDownloadtime: K0, 
+						segmentFrom : K1, 
+						segmentTo : K2
+					}
+				.......
+			}
+		"""
 
 	def downloadMetadata(self, url=None):
 	    # Static data as of now
@@ -33,6 +35,9 @@ class SegmentHandler:
 	    				"segmentFrom" : 10*i,
 	    				"segmentTo" : 10*(i+1)}
 	    	self.segmentAssignList.append(False)
+
+	def getMetadata(self, segmentId):
+		return self.metadata[segmentId]
 
 	def downloadSegment(self, segmentId):
 		time.sleep(self.metadata[segmentId])
