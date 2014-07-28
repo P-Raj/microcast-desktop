@@ -13,8 +13,8 @@ class JobScheduler:
     	return self.environment.procId == SegmentAssignProcId
 
     def runMicroDownload(self):
-		if self.isSegmentAssigner():
-			MD.microDownload()
+	if self.isSegmentAssigner():
+		MD.microDownload()
 
-	def runMicroNC(self):
-		MN.microNC()
+    def runMicroNC(self):
+	MN.microNC()

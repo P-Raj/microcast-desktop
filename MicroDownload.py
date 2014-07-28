@@ -3,6 +3,9 @@ import SegmentHandler as Segments
 
 MAX_BACKLOG = 5
 
+Segments.downloadMetadata()
+Peers.initPeers(1)
+
 def microDownload():
 
 	while not Segments.allAssigned():

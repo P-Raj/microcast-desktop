@@ -5,7 +5,7 @@ import time
 import random
 
 metadata = None
-segmentAssignList = None
+segmentAssignList = []
 
 
 """ metadata fields
@@ -30,7 +30,7 @@ def downloadMetadata(url=None):
     	metadata[i] = {"segmentDownloadtime" : 2,
     				"segmentFrom" : 10*i,
     				"segmentTo" : 10*(i+1)}
-    	segmentAssignList[i] = False
+    	segmentAssignList.append(False)
 
 def downloadSegment(segmentId):
 	global metadata
