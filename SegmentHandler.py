@@ -48,6 +48,9 @@ class SegmentHandler:
 	def assignSegment(self, segmentId):
 		self.segmentAssignList[segmentId] = True
 
+	def unassignSegment(self, segmentId):
+		self.segmentAssignList[segmentId] = False
+
 	def getNextUnassigned(self):
 		if not allAssigned():
 			return random.choice(

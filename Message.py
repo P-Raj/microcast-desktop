@@ -53,6 +53,20 @@ class RequestMessage(Message):
     def isRequest(self):
         return True
 
+class RequestResponseMessage(Message):
+
+    def __init__(self, procId, messageId):
+        # messageId is the messageId of the Request message
+        Message.__init__(self, procId, messageId)
+
+    def setStatus(self, status):
+        self.status = status
+        # True if the Request was successful
+        # False otherwise
+
+    def isRequestResponse(self):
+        return True
+
 class DimensionOfMessage(Message):
 
     def __init__(self, procId, messageId):

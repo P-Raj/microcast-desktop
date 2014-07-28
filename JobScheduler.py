@@ -30,7 +30,7 @@ class JobScheduler:
 
 
         self.segmentHandler.downloadMetadata()
-        self.peers.initself.peers(self.environment.Get_size())
+        self.peers.initPeers(self.environment.Get_size())
 
         while not self.segmentHandler.allAssigned():
 
@@ -44,17 +44,26 @@ class JobScheduler:
                 requestSegment.initMessage(msgProperty=None, 
                     msgContent=self.segmentHandler.getMetadata(requestSegmentId))
 
-                Connection.sendDownloadRequest(peerId, requestSegment)
+
+                self.environment.send(peerId, requestSegment)
                 
-                self.segmentHandler.assignSegment(feedback["segment"]["id"])
-                self.peers.addBackLog(peerId, requestSegment)
+                self.segmentHandler.assignSegment(requestSegmentId)
+                self.peers.addBackLog(peerId, requestSegmentId)
 
             else:
-                feedback = Connection.waitForFeedback()
+                feedback = self.environment.waitForFeedback()
 
-            self.peers.removeBackLog(peerId, feedback["segment"])
+            self.peers.removeBackLog(peerId, feedback.messageId)
 
-            if feedback["Status"] == "Failure":
-                requestSegment = self.segmentHandler.getNextUnassigned()
-                Connection.sendDownloadRequest(feedback["from"], requestSegment)
-                self.segmentHandler.assignSegment(feedback["segment"]["id"])
+            if not feedback.status:
+                
+                self.segmentHandler.unassignSegment(requestSegmentId)
+
+                requestSegmentId = self.segmentHandler.getNextUnassigned()
+                
+                requestSegment = RequestMessage(SegmentAssignProcId, requestSegmentId)
+                requestSegment.initMessage(msgProperty=None, 
+                    msgContent=self.segmentHandler.getMetadata(requestSegmentId))
+
+                self.environment.send(feedback.fromId, requestSegment)
+                self.segmentHandler.assignSegment(requestSegmentId)
