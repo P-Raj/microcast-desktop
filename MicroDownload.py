@@ -3,15 +3,14 @@ import SegmentHandler as Segments
 
 MAX_BACKLOG = 5
 
-Segments.downloadMetadata()
-Peers.initPeers(1)
+def microDownload(numProcs):
 
-def microDownload():
+	Segments.downloadMetadata()
+	Peers.initPeers(numProcs)
 
 	while not Segments.allAssigned():
 
 	    peerId = Peers.leastBusyPeer()
-
 	    peerBackLog = Peers.getBackLog(peerId)
 
 	    if peerBackLog < MAX_BACKLOG:
