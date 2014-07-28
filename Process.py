@@ -7,11 +7,9 @@ from Queues import LocalQueue
 environment = Communicator()
 
 #set up local queues
-advts = LocalQueue()
-requests = LocalQueue()
 
 # set up job scheduler
 procJobScheduler = JobScheduler(environment)
 
-procJobScheduler.runMicroDownload(advts, requests)
-procJobScheduler.runMicroNC(advts, requests)
+procJobScheduler.runMicroDownload()
+procJobScheduler.runMicroNC()

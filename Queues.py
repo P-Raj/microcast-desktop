@@ -10,7 +10,7 @@ class LocalQueue:
 	def add(message):
 		self.queue.put(message)
 
-	def getFromAdvertisement(message):
+	def get(message):
 		if self.queue.empty():
 			return None
 		return self.queue.get()
