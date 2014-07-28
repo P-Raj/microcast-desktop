@@ -33,5 +33,11 @@ class Communicator:
 	def receiveBroadcast(self, fromProc):
 		return self.commWorld.bcast(None, root=fromProc)
 	
-	def waitForFeedback():
-		pass
+	def waitForFeedback(self):
+		#non blocking wait function
+		#returns None if there is no message waiting
+		for fromProc in range(self.totalProc):
+			if fromProc != self.procId:
+				if self.commWorld.Iprobe(source = fromProc):
+					return comm.recv(source = fromProc)
+		return None
