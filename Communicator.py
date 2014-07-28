@@ -1,14 +1,15 @@
 from mpi4py import MPI
+from random import randrange
 
 class Communicator:
 
 	def __init__(self):
 		self.setupCommunicator()
-
+		
 	def setupCommunicator(self):
 		self.commWorld = MPI.COMM_WORLD
 		self.totalProc = self.commWorld.Get_size()
-		self.procId = self.commWorld.Get_rank()   
+		self.procId = self.commWorld.Get_rank()
 
 	def getMyId(self):
 		return self.procId
@@ -17,29 +18,20 @@ class Communicator:
 		print("You are process number # %d of %d processes", 
 			self.procId, self.totalProc)
 
-	def setupChannel(numProcs):
-		pass
+	def send(self, toProc, message):
+		self.communicator.send(message, dest=toProc)
 
-	def send(fromProc, toProc, message):
-		pass
+	def receive(self, fromProc):
+		return self.communicator.recv(source= fromProc)
 
-	def receive(fromProc, toProc):
-		pass
+	def sendToRandom(self, message):
+		self.send(randrange(self.totalProc), message)
 
-	def sendToRandom(fromProc, toProc):
-		pass
+	def sendBroadcast(self, message):
+		self.commWorld.bcast(message, root = self.procId)
 
-	def broadcast(fromProc):
-		pass
-
-	def sendDownloadRequest():
-		pass
-
-	def sendSegment():
-		pass
-
-	def requestSegment():
-		pass
-
+	def receiveBroadcast(self, fromProc):
+		return self.commWorld.bcast(None, root=fromProc)
+	
 	def waitForFeedback():
 		pass
