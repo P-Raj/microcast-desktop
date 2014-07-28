@@ -1,28 +1,25 @@
 import random
-peers = None
 
+class Peers:
 
-def initPeers(numPeers):
-	#initializes peers
-	global peers
-	peers = dict([(peerId, []) for peerId in range(numPeers)])
+	def __init__(self):
+		self.peers = None
 
-def getAPeer():
-	global peers
-	return random.choice(peers.keys())
+	def initPeers(self, numPeers):
+		#initializes self.peers
+		self.peers = dict([(peerId, []) for peerId in range(numPeers)])
 
-def leastBusyPeer():
-	global peers
-	return min(peers, key=peers.get)
+	def getAPeer(self):
+		return random.choice(self.peers.keys())
 
-def getBackLog(peerId):
-	global peers
-	return peers[peerId]
+	def leastBusyPeer(self):
+		return min(self.peers, key=self.peers.get)
 
-def addBackLog(peerId):
-	global peers
-	peers[peerId] += 1
+	def getBackLog(self, peerId):
+		return self.peers[peerId]
 
-def removeBackLog(peer):
-	global peers
-	peers[peerId] -= 1
+	def addBackLog(self, peerId):
+		self.peers[peerId] += 1
+
+	def removeBackLog(self, peer):
+		self.peers[peerId] -= 1
