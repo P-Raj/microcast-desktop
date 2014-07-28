@@ -1,27 +1,35 @@
+from mpi4py import MPI
 
 class Communicator:
 
-	def __init__(self, commWorld):
-		self.commWorld = commWorld
+	def __init__(self):
+		self.setupCommunicator()
 
 	def setupCommunicator(self):
-        commWorld = MPI.COMM_WORLD
-        self.totalProc = commWorld.Get_size()
-        self.procId = commWorld.Get_rank()   
+		self.commWorld = MPI.COMM_WORLD
+		self.totalProc = self.commWorld.Get_size()
+		self.procId = self.commWorld.Get_rank()   
+
+	def getMyId(self):
+		return self.procId
+
+	def informClient(self):
+		print("You are process number # %d of %d processes", 
+			self.procId, self.totalProc)
 
 	def setupChannel(numProcs):
 		pass
 
-	def send(from, to, message):
+	def send(fromProc, toProc, message):
 		pass
 
-	def receive(from, to):
+	def receive(fromProc, toProc):
 		pass
 
-	def sendToRandom(from, to):
+	def sendToRandom(fromProc, toProc):
 		pass
 
-	def broadcast(from):
+	def broadcast(fromProc):
 		pass
 
 	def sendDownloadRequest():
