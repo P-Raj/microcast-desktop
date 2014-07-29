@@ -33,8 +33,9 @@ class Datastore:
                 self.storedSegments[msg[0]] = True
             self.buffer = []
             # emptying the buffer
-        self.stdout.write("\r %f" % (len((x for x in self.storedSegments if x))/ float(len(self.storedSegments)))
-        self.stdout.flush()
+        storedSegs = [x for x in self.storedSegments if x]
+        sys.stdout.write("\r %f" % (len(storedSegs)/ float(len(self.storedSegments))))
+        sys.stdout.flush()
 
     def get(self):
         return picle.load(self.file)
@@ -62,7 +63,7 @@ class Datastore:
         sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
         sys.stdout.flush()
         """
-        
+
     def __str__(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
         return str(percent)
