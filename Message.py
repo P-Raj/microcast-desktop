@@ -72,13 +72,13 @@ class RequestMessage(Message):
     def isRequest(self):
         return True
 
-    def getResponse(self, metaData):
+    def getResponse(self, metadata):
         _response = SegmentMessage(self.receiver,
                                    self.messageId,
                                    self.sender)
-        with open(metaData["filename"], "rb") as fp:
-            fp.seek(metaData[str(self.messageId)])
-            _response.content = fp.read(metadata["0"])
+        with open(metadata["filename"], "rb") as fp:
+            fp.seek(metadata[str(self.messageId)]["segmentFrom"])
+            _response.content = fp.read(metadata["0"]["segmentFrom"])
         return _response
 
     def __str__(self):
