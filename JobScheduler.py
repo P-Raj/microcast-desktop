@@ -225,12 +225,15 @@ class JobScheduler:
                 completionMsg = Message.DownloadCompleteMessage(
                     senderId=self.environment.procId,
                     receiverId=self.SegmentAssignProcId)
+                print "Sending completion message"
                 self.environment.send(self.SegmentAssignProcId,
                                       completionMsg)
 
+            """
             if self.isMicroNCComplete():
                 time.sleep(20)
                 return
+            """
 
     def microNC(self):
 

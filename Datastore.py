@@ -58,8 +58,8 @@ class Datastore:
         sys.stdout.flush()
         
     def __str__(self):
-        pcDwnld = float(len(self.downloadedSegments.keys()))
-        return str(1)
+        percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
+        return str(percent)
 
     def getSegment(self, segmentId):
         self.downloadedSegments.get(segmentId, None)
