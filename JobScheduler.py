@@ -23,6 +23,8 @@ class JobScheduler:
 
         self.environment = environment
 
+        self.terminate = False
+
         self.SegmentAssignProcId = self.environment.totalProcs - 1
 
         self.segmentHandler = SegmentHandler()
@@ -59,6 +61,10 @@ class JobScheduler:
 
         while True:
 
+            if self.terminate:
+                print "Terminating Ad Q"
+                break
+
             if not self.toBeAdvertised.empty():
 
                 adMessage = self.toBeAdvertised.get()
@@ -82,7 +88,16 @@ class JobScheduler:
 
     def handleDownloadRequestQueue(self):
 
+        downloadThread = None
+
         while True:
+
+            if self.terminate:
+                print "Terminating Downloa req Q"
+                if downloadThread and downloadThread.isAlive():
+                    print "Waiting for download to complete"
+                    downloadThread.join()
+                    break
 
             if not self.downloadRequests.empty() and not self.isDownloading:
 
@@ -111,6 +126,11 @@ class JobScheduler:
                                          depQueue="ReqQ",
                                          message=reqMessage)
                     self.environment.send(responseMsg.receiver, responseMsg)
+
+            if self.terminate:
+                break
+
+        print "Terminating Rquest Queue Functions"
 
     """ </Functions to handle local queues> """
 
@@ -239,21 +259,27 @@ class JobScheduler:
         adThread = threading.Thread(target=readingAdQ)
         adThread.start()
 
+        print "Waiting for channel thread to complete"
         chanThread.join()
+        print "Channel thread complete"
+
+
+        self.terminate = True
 
         termThread = threading.Thread(target=self.detectMicroNCCompetion)
         termThread.start()
         termThread.join()
 
         print "Done"
-        t.exit()
-
+        
         # TODO: make the following threads non-daemonic
-        reqThread.exit()
-        dnldThread.exit()
-        adThread.exit()
+        reqThread.join()
+        dnldThread.join()
+        adThread.join()
 
         self.dataHandler.store(forceStore=True)
+
+        t.exit()
 
     def runMicroDownload(self):
         self.microDownload()
@@ -405,6 +431,8 @@ class JobScheduler:
                                                  _,
                                                  "terminateSignal",
                                                  terminationMsg)
+                    print "Terminating in Channel"
+                    break
 
     def handleOutgoingChannelMD(self):
 
@@ -417,6 +445,8 @@ class JobScheduler:
 
             if peerBackLog < self.MAX_BACKLOG:
                 self.sendDownloadRequest(peerId)
+
+        print "Outgoing channels MD closed"
 
     def microDownload(self):
 
