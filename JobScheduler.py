@@ -2,7 +2,8 @@ from mpi4py import MPI
 from Peers import Peers
 from SegmentHandler import SegmentHandler
 from Communicator import Communicator
-from Message import RequestMessage
+from Message import AdvertisementMessage, RequestMessage, RequestResponseMessage, DimensionOfMessage
+import DataStore
 
 class JobScheduler:
 
@@ -23,8 +24,42 @@ class JobScheduler:
 	if self.isSegmentAssigner():
 		self.microDownload()
 
-    def runMicroNC(self):
-	MN.microNC()
+    def initLocalQueue(self):
+        self.toBeAdvertised = Queue.Queue()
+        self.requestQueue = Queue.Queue()
+
+    def microNC(self):
+
+        self.initLocalQueue()
+
+        while True:
+
+            _message = self.environment.nonblockingReceive()
+
+            if isinstance(_message, SegmentMessage):
+                if _message.procId == self.environment.getMyId():
+                    #  The message was requested by the current process
+                    self.environment.sendToRandom(_message)
+                    # Send the message to one of th eneighbors
+                self.toBeAdvertised.add(_message)
+
+            if _message.isPacket():
+                receivedFrom = _message.sender
+
+                if isinstance(_message, AdvertisementMessage):
+                    
+                    # Request sender for the segment
+                    _request = RequestMessage(receivedFrom, _message.messageId)
+                    _request.initMessage(None, _message.content)
+
+                    self.environment.send(receivedFrom, _request)
+
+                elif isinstance(_message, RequestMessage):
+                    self.requestQueue.add(_message)
+
+                elif isinstance(_message, DimensionOfMessage):
+                    DataStore.store(_message)
+
 
     def microDownload(self):
 
