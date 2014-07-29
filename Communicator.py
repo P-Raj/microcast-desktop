@@ -23,6 +23,8 @@ class Communicator:
         self.setChannels()
         self.printChannels()
 
+        self.sendLock = threading.Lock()
+
         assert(len(self.connections.keys()) == len(self.peers)-1)
 
         self.numPeers = len(self.connections.keys())
@@ -107,8 +109,9 @@ class Communicator:
             soc.bind(('', self.meComplete[1]))
 
             # Ipv4 with TCP connection
-            soc.settimeout(5.0)
-
+            #soc.settimeout(5.0)
+            soc.setblocking(1)
+            
             try:
                 soc.connect((peerIp, peerRecvPort))
                 peerCounter += 1
@@ -156,6 +159,7 @@ class Communicator:
 
     def _send(self, message, dest):
 
+        self.sendLock.acquire()
         message = pickle.dumps(message)
 
         #sending length
@@ -166,6 +170,8 @@ class Communicator:
         for message_i in range(0, message_length, 1024):
             self.outChan[dest].send(message[:1024])
             message = message[1024:]
+
+        self.sendLock.release()
 
     def _receive(self):
 
@@ -234,6 +240,8 @@ class Communicator:
             while len(msg) < msglen:
                 msg += sock.recv(msglen-len(msg))
 
-            self.rec.put(pickle.loads(msg))
-
+	    try:
+            	self.rec.put(pickle.loads(msg))
+	    except:
+		print "Some segments are lost"
         return
