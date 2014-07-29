@@ -4,13 +4,14 @@
 import random
 import urllib
 import json
-
+import threading
 
 class SegmentHandler:
 
     def __init__(self):
         self.metadata = None
         self.segmentAssignList = []
+        self.segmentAssignListLock = threading.Lock()
         self.downloadedList = []
 
     def downloadMetadata(self, url, videoName):
@@ -37,7 +38,10 @@ class SegmentHandler:
         return self.metadata[str(segmentId)]
 
     def allAssigned(self):
-        return all(self.segmentAssignList)
+        self.segmentAssignListLock.acquire()
+        op = all(self.segmentAssignList)
+        self.segmentAssignListLock.release()
+        return op
 
     def allDownloaded(self):
         return all(self.downloadedList)
@@ -46,11 +50,15 @@ class SegmentHandler:
         self.downloadedList[segmentId] = True
 
     def assignSegment(self, segmentId):
+        self.segmentAssignListLock.acquire()
         self.segmentAssignList[segmentId] = True
+        self.segmentAssignListLock.release()
 
     def unassignSegment(self, segmentId):
+        self.segmentAssignListLock.acquire()
         self.segmentAssignList[segmentId] = False
-
+        self.segmentAssignListLock.release()
+        
     def getNextUnassigned(self):
         # used only by microDownload
         if not self.allAssigned():

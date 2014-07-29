@@ -220,7 +220,7 @@ class JobScheduler:
     def detectMicroNCCompetion(self):
 
         while True:
-            if float(str(self.dataHandler)) == 100:
+            if float(str(self.dataHandler)) >= 90:
                 # all segments have been downloaded
                 completionMsg = Message.DownloadCompleteMessage(
                     senderId=self.environment.procId,
@@ -228,6 +228,7 @@ class JobScheduler:
                 print "Sending completion message"
                 self.environment.send(self.SegmentAssignProcId,
                                       completionMsg)
+                self.terminate = True
 
             """
             if self.isMicroNCComplete():
@@ -242,9 +243,11 @@ class JobScheduler:
 
         self.initLocalQueue()
 
+        """
         import ProcessLogger as PL
         t = threading.Thread(target=PL.dumpMemory,args=["memory0.dump"])
         t.start()
+        """
 
         readingReqQ = self.handleRequestQueue
         readingDnldReqQ = self.handleDownloadRequestQueue
@@ -267,8 +270,7 @@ class JobScheduler:
         print "Channel thread complete"
 
 
-        self.terminate = True
-
+        
         termThread = threading.Thread(target=self.detectMicroNCCompetion)
         termThread.start()
         termThread.join()
@@ -280,9 +282,12 @@ class JobScheduler:
         dnldThread.join()
         adThread.join()
 
+        termThread.join()
+
+
         self.dataHandler.store(forceStore=True)
 
-        t.exit()
+        #t.exit()
 
     def runMicroDownload(self):
         self.microDownload()
