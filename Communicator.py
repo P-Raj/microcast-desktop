@@ -111,7 +111,7 @@ class Communicator:
             # Ipv4 with TCP connection
             #soc.settimeout(5.0)
             soc.setblocking(1)
-            
+
             try:
                 soc.connect((peerIp, peerRecvPort))
                 peerCounter += 1
@@ -240,8 +240,9 @@ class Communicator:
             while len(msg) < msglen:
                 msg += sock.recv(msglen-len(msg))
 
-	    try:
-            	self.rec.put(pickle.loads(msg))
-	    except:
-		print "Some segments are lost"
+            try:
+                self.rec.put(pickle.loads(msg))
+            except:
+                print "Some segments are lost"
+        print "Reading complete"
         return

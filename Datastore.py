@@ -14,6 +14,7 @@ class Datastore:
         self.bufferSize =  10 #number of segments downloaded before storing
         self.buffer = []
         self.meta = meta
+        self.storedSegments = [False]*self.meta["numSegments"]
         self.createFile()
 
     def createFile(self):
@@ -29,8 +30,11 @@ class Datastore:
                 with open(self.filename,"r+b") as fp:
                     fp.seek(startFrom)
                     fp.write(msg[1])
+                self.storedSegments[msg[0]] = True
             self.buffer = []
             # emptying the buffer
+        self.stdout.write("\r %f" % (len((x for x in self.storedSegments if x))/ float(len(self.storedSegments)))
+        self.stdout.flush()
 
     def get(self):
         return picle.load(self.file)
@@ -52,10 +56,12 @@ class Datastore:
 
     def printProgress(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
+        """
         sys.stdout.write("\r" + Fore.BLUE + "%0.2f Complete | %s" % (percent*100,str(self.getProgressBar())))
         sys.stdout.flush()
         sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
         sys.stdout.flush()
+        """
         
     def __str__(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
