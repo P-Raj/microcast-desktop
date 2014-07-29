@@ -1,5 +1,5 @@
 from mpi4py import MPI
-from random import randrange
+from random import randrange, choice
 
 class Communicator:
 
@@ -19,10 +19,10 @@ class Communicator:
 			self.procId, self.totalProc)
 
 	def send(self, toProc, message):
-		self.communicator.send(message, dest=toProc)
+		self.commWorld.send(message, dest=toProc)
 
 	def receive(self, fromProc):
-		return self.communicator.recv(source= fromProc)
+		return self.commWorld.recv(source= fromProc)
 
 	def sendToRandom(self, message):
 		self.send(randrange(self.totalProc), message)
@@ -33,11 +33,24 @@ class Communicator:
 	def receiveBroadcast(self, fromProc):
 		return self.commWorld.bcast(None, root=fromProc)
 	
-	def waitForFeedback(self):
-		#non blocking wait function
+	def getNonEmptyChannels(self):
+		_channels = []
+		for procId in range(self.totalProc):
+			if procId != self.procId and self.commWorld.Iprobe(source = procId):
+				_channels.append(procId)
+		return _channels
+
+	def blockingReceive(self):
+		#blocking wait function
 		#returns None if there is no message waiting
-		for fromProc in range(self.totalProc):
-			if fromProc != self.procId:
-				if self.commWorld.Iprobe(source = fromProc):
-					return comm.recv(source = fromProc)
+		nonEmptyChannels = self.getNonEmptyChannels()
+		while not nonEmptyChannels:
+			nonEmptyChannels = self.getNonEmptyChannels()
+		return self.receive(random.choice(nonEmptyChannels))
+
+	def nonblockingReceive(self):
+
+		nonEmptyChannels = self.getNonEmptyChannels()
+		if nonEmptyChannels:
+			return self.receive(random.choice(nonEmptyChannels))
 		return None

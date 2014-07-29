@@ -51,7 +51,7 @@ class JobScheduler:
                 self.peers.addBackLog(peerId, requestSegmentId)
 
             else:
-                feedback = self.environment.waitForFeedback()
+                feedback = self.environment.blockingReceive()
 
             self.peers.removeBackLog(peerId, feedback.messageId)
 
