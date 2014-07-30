@@ -5,6 +5,9 @@ class Peers:
 	def __init__(self):
 		self.peers = None
 
+	def __init__(self, numPeers):
+		self.initPeers(numPeers)
+
 	def initPeers(self, numPeers):
 		#initializes self.peers
 		self.peers = dict([(peerId, []) for peerId in range(numPeers)])
