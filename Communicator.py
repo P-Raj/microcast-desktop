@@ -15,8 +15,7 @@ class Communicator:
 		return self.procId
 
 	def informClient(self):
-		print("You are process number # %d of %d processes", 
-			self.procId, self.totalProc)
+		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
 
 	def send(self, toProc, message):
 		self.commWorld.send(message, dest=toProc)
