@@ -7,18 +7,19 @@ import Datastore
 
 class JobScheduler:
 
-    def __init__(self, environment):
+    MAX_BACKLOG = 5
+    SegmentAssignProcId = 0
 
-        MAX_BACKLOG = 5
-        SegmentAssignProcId = 0
-        
+    def __init__(self, environment):
+ 	
+	self.MAX_BACKLOG = 5
+	self.SegmentAssignProcId = 0    
         self.environment = environment
         self.segmentHandler = SegmentHandler()
         self.peers = Peers(self.environment.totalProc)
 
-    def isSegmentAssigner(self):
-    	
-        return self.environment.procId == SegmentAssignProcId
+    def isSegmentAssigner(self):    	
+        return self.environment.procId == self.SegmentAssignProcId
 
     def runMicroDownload(self):
 	if self.isSegmentAssigner():
@@ -30,6 +31,7 @@ class JobScheduler:
 
     def microNC(self):
 
+	print "microNC initiated by process ", self.environment.procId
         self.initLocalQueue()
 
         while True:
@@ -64,15 +66,16 @@ class JobScheduler:
     def microDownload(self):
 
 
+	print "microDownload initiated by process ", self.environment.procId
         self.segmentHandler.downloadMetadata()
-        self.peers.initPeers(self.environment.Get_size())
+        self.peers.initPeers(self.environment.totalProc)
 
         while not self.segmentHandler.allAssigned():
 
             peerId = self.peers.leastBusyPeer()
             peerBackLog = self.peers.getBackLog(peerId)
 
-            if peerBackLog < MAX_BACKLOG:
+            if peerBackLog < self.MAX_BACKLOG:
 
                 requestSegmentId = self.segmentHandler.getNextUnassigned()
                 requestSegment = RequestMessage(SegmentAssignProcId, requestSegmentId)
