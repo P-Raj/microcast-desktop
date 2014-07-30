@@ -2,8 +2,9 @@ from mpi4py import MPI
 from Peers import Peers
 from SegmentHandler import SegmentHandler
 from Communicator import Communicator
-from Message import AdvertisementMessage, RequestMessage, RequestResponseMessage, DimensionOfMessage
+from Message import *
 import Datastore
+import Queue
 
 class JobScheduler:
 
@@ -37,6 +38,9 @@ class JobScheduler:
         while True:
 
             _message = self.environment.nonblockingReceive()
+
+	    if not _message:
+		continue
 
             if isinstance(_message, SegmentMessage):
                 if _message.procId == self.environment.getMyId():

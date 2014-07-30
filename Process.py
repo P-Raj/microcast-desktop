@@ -14,4 +14,4 @@ environment.informClient()
 procJobScheduler = JobScheduler(environment)
 
 procJobScheduler.runMicroDownload()
-#procJobScheduler.runMicroNC()
+procJobScheduler.microNC()
