@@ -3,7 +3,7 @@ from Peers import Peers
 from SegmentHandler import SegmentHandler
 from Communicator import Communicator
 from Message import AdvertisementMessage, RequestMessage, RequestResponseMessage, DimensionOfMessage
-import DataStore
+import Datastore
 
 class JobScheduler:
 
@@ -14,7 +14,7 @@ class JobScheduler:
         
         self.environment = environment
         self.segmentHandler = SegmentHandler()
-        self.peers = self.peers()
+        self.peers = Peers(self.environment.totalProc)
 
     def isSegmentAssigner(self):
     	
