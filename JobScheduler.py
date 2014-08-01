@@ -51,6 +51,7 @@ class JobScheduler:
             dwnldReqMessage.download()
 	    Logging.info('P' + str(self.environment.procId)  + " : DownloadReqQueue.pop()")
             self.dataHandler.addSegment(dwnldReqMessage.messageId, dwnldReqMessage.content)
+	    self.dataHandler.store(dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
             # get response and send it to the inititor
 
@@ -67,11 +68,7 @@ class JobScheduler:
 
     def stopMicroNC(self):
 
-        if self.toBeAdvertised.empty() 
-            and self.requestQueue.empty() 
-            and self.downloadRequests.empty()
-            and self.dataHandler.downlodedAll(self.environment.totalProc):
-
+        if self.toBeAdvertised.empty() and self.requestQueue.empty() and self.downloadRequests.empty() and self.dataHandler.downlodedAll(4):
             return True
 
         return False
@@ -112,6 +109,7 @@ class JobScheduler:
                     if isinstance(_message, Message.SegmentMessage):
 			Logging.info('P' + str(self.environment.procId) + " received contents")
                         self.dataHandler.addSegment(_message.messageId,_message.content)
+			self.dataHandler.store(_message)
 
 
             elif nonDetchoice == 1:
@@ -122,6 +120,9 @@ class JobScheduler:
 
             else:
                 self.handleAdvertisementQueue()
+	
+	Logging.info("P" + str(self.environment.procId) + "stopped microNC")
+	raise Exception("Went outside loop")	
 
     def createLog(self, from_ = None, to_ = None, operation = None, message = None, info = None):
 	chan = str(from_) + str(to_)

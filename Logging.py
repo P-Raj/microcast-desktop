@@ -11,7 +11,6 @@ LEVELS = { 'debug':logging.DEBUG,
 
 
 level_name = 'debug'
-setLevel(level_name)
 
 def setLevel(level_name):
 	global logging
@@ -21,3 +20,5 @@ def setLevel(level_name):
 def info(message):
 	global logging
 	logging.info(message)
+
+setLevel(level_name)

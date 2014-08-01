@@ -10,7 +10,7 @@ environment = Communicator()
 processId = environment.getMyId()
 Logging.info('Process id : ' + str(processId))
 
-if processId != 0:
+if processId != 1:
 	Logging.setLevel('critical')
 
 else:

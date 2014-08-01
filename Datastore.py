@@ -25,4 +25,9 @@ class Datastore:
 		self.downloadedSegments.get(segmentId,None)
 
 	def downlodedAll(self, numSegments):
-		return all([self.getSegment(x) for x in range(numSegments)])
+		#print self.downloadedSegments.keys()
+		for x in range(numSegments):
+			if x not in self.downloadedSegments.keys():
+				return False
+		return True	
+		#return all([self.getSegment(x) for x in range(numSegments)])
