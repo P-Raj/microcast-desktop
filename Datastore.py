@@ -4,6 +4,7 @@ from datetime import datetime
 class DataStore:
 
 	def __init__(self, name , mode='w'):
+		self.downloadedSegments = {}
 		self.file = open(name, mode)
 
 	def store(self, message):
@@ -12,3 +13,9 @@ class DataStore:
 
 	def get(self):
 		return picle.load(self.file)
+
+	def addSegment(self, segmentId , segmentProperty):
+		self.downloadedSegments[segmentId] = segmentProperty
+
+	def getSegment(self, segmentId):
+		self.downloadedSegments.get(segmentId,None)

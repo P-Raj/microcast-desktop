@@ -6,6 +6,7 @@ from Message import *
 import Datastore
 import Queue
 
+
 class JobScheduler:
 
     MAX_BACKLOG = 5
@@ -18,6 +19,7 @@ class JobScheduler:
         self.environment = environment
         self.segmentHandler = SegmentHandler()
         self.peers = Peers(self.environment.totalProc)
+        self.dataHandler = Datastore.Datastore()
 
     def isSegmentAssigner(self):    	
         return self.environment.procId == self.SegmentAssignProcId
@@ -29,48 +31,75 @@ class JobScheduler:
     def initLocalQueue(self):
         self.toBeAdvertised = Queue.Queue()
         self.requestQueue = Queue.Queue()
+        self.downloadRequests = Queue.Queue()
+
+
+    def handleAdvertisementQueue(self):
+        if not self.toBeAdvertised.Empty():
+            adMessage = self.toBeAdvertised.get()
+            segmentId = adMessage.messageId
+            if not self.dataHandler.getSegment():
+                reqMessage = adMessage.getResponse()
+                self.environment.send(adMessage.sender, reqMessage)
+
+    def handleDownloadRequestQueue(self):
+        if not self.downloadRequests.Empty():
+            dwnldReqMessage = self.downloadRequests.get()
+            dwnldReqMessage.download()
+            self.dataHandler.addSegment(dwnldReqMessage.messageId, dwnldReqMessage.content)
+            self.toBeAdvertised.put(dwnldReqMessage)
+            # get response and send it to the inititor
+
+    def handleRequestQueue(self):
+        if not self.requestQueue.Empty():
+            reqMessage = self.requestQueue.get()
+            responseMsg = reqMessage.getResponse()
+            self.environment.send(responseMsg.receiver, responseMsg)
 
     def microNC(self):
+        print "microNC initiated by process ", self.environment.procId
 
-	print "microNC initiated by process ", self.environment.procId
         self.initLocalQueue()
-
+        
         while True:
 
-            _message = self.environment.nonblockingReceive()
+            nonDetchoice = random.randrange(4)
 
-	    if not _message:
-		continue
+            if nonDetchoice == 0:
 
-            if isinstance(_message, SegmentMessage):
-                if _message.procId == self.environment.getMyId():
-                    #  The message was requested by the current process
-                    self.environment.sendToRandom(_message)
-                    # Send the message to one of th eneighbors
-                self.toBeAdvertised.add(_message)
+                _message = self.environment.nonblockingReceive()
 
-            if _message.isPacket():
-                receivedFrom = _message.sender
+                if _message:
 
-                if isinstance(_message, AdvertisementMessage):
-                    
-                    # Request sender for the segment
-                    _request = RequestMessage(receivedFrom, _message.messageId)
-                    _request.initMessage(None, _message.content)
+                    if isinstance(_message, DownloadRequestMessage):
+                        self.downloadRequests.put(_message)
 
-                    self.environment.send(receivedFrom, _request)
+                    if isinstance(_message, AdvertisementMessage):
+                        # request the sender for the segments
+                        if not self.getSegment(_message.messageId):
+                            _response = _message.getResponse()
+                            self.environment.send(_response.receiver, _response)
 
-                elif isinstance(_message, RequestMessage):
-                    self.requestQueue.add(_message)
+                    if isinstance(_message, RequestMessage):
+                        # add this to the request queue
+                        self.requestQueue.put(_message)
 
-                elif isinstance(_message, DimensionOfMessage):
-                    DataStore.store(_message)
+                    if isinstance(_message, SegmentMessage):
+                        self.dataHandler.addSegment(_message.messageId,_message.content)
 
+
+            elif nonDetchoice == 1:
+                handleRequestQueue()
+
+            elif nonDetchoice == 2:
+                handleDownloadRequestQueue()
+
+            else:
+                handleAdvertisementQueue()
 
     def microDownload(self):
 
-
-	print "microDownload initiated by process ", self.environment.procId
+        print "microDownload initiated by process ", self.environment.procId
         self.segmentHandler.downloadMetadata()
         self.peers.initPeers(self.environment.totalProc)
 
