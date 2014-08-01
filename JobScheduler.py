@@ -65,12 +65,24 @@ class JobScheduler:
 	if self.environment.procId != self.SegmentAssignProcId:
 		self.microNC()
 
+    def stopMicroNC(self):
+
+        if self.toBeAdvertised.empty() 
+            and self.requestQueue.empty() 
+            and self.downloadRequests.empty()
+            and self.dataHandler.downlodedAll(self.environment.totalProc):
+
+            return True
+
+        return False
+
+
     def microNC(self):
         Logging.info( "microNC started by process "+str(self.environment.procId))
 
         self.initLocalQueue()
         
-        while True:
+        while not self.stopMicroNC():
 
             nonDetchoice = random.randrange(4)
 

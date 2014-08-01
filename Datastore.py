@@ -23,3 +23,6 @@ class Datastore:
 
 	def getSegment(self, segmentId):
 		self.downloadedSegments.get(segmentId,None)
+
+	def downlodedAll(self, numSegments):
+		return all([self.getSegment(x) for x in range(numSegments)])
