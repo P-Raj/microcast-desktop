@@ -30,13 +30,6 @@ class Message(object):
     def isDimensionOfSegment(self):
         return False
 
-class SegmentMessage(Message):
-
-    def __init__(self, senderId, messageId, receiverId = None):
-        super(Message,self).__init__(senderId, messageId, receiverId)
-
-    def isSegment(self):
-        return True
 
 class AdvertisementMessage(Message):
 
@@ -64,7 +57,7 @@ class RequestMessage(Message):
 
 def DownloadRequestMessage(Message):
 
-    def __init__(self, senderId, messageId, receiverId = None):
+    def __init__(self, senderId, messageId, receiverId):
         super(Message,self).__init__(senderId, messageId, receiverId)
 
     def download(self):

@@ -53,7 +53,7 @@ class SegmentHandler:
 
 	def getNextUnassigned(self):
 		# used only by microDownload
-		if not allAssigned():
+		if not self.allAssigned():
 			return random.choice(
 				[i for i,x in enumerate(self.segmentAssignList) if not x]
 				)
