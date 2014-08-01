@@ -18,7 +18,7 @@ class Communicator:
 		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
 
 	def send(self, toProc, message):
-		self.commWorld.send(message, dest=toProc)
+		self.commWorld.isend(message, dest=toProc)
 
 	def receive(self, fromProc):
 		return self.commWorld.recv(source= fromProc)
@@ -45,11 +45,11 @@ class Communicator:
 		nonEmptyChannels = self.getNonEmptyChannels()
 		while not nonEmptyChannels:
 			nonEmptyChannels = self.getNonEmptyChannels()
-		return self.receive(random.choice(nonEmptyChannels))
+		return self.receive(choice(nonEmptyChannels))
 
-	def nonblockingReceive(self):
+	def nonBlockingReceive(self):
 
 		nonEmptyChannels = self.getNonEmptyChannels()
 		if nonEmptyChannels:
-			return self.receive(random.choice(nonEmptyChannels))
+			return self.receive(choice(nonEmptyChannels))
 		return None

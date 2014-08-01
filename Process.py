@@ -16,4 +16,4 @@ Logging.info('Setting up jobscheduler')
 procJobScheduler = JobScheduler(environment)
 
 procJobScheduler.runMicroDownload()
-procJobScheduler.microNC()
+procJobScheduler.runMicroNC()

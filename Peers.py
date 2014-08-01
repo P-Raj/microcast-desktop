@@ -10,13 +10,13 @@ class Peers:
 
 	def initPeers(self, numPeers):
 		#initializes self.peers
-		self.peers = dict([(peerId, []) for peerId in range(numPeers)])
+		self.peers = [0 for peerId in range(numPeers)]
 
 	def getAPeer(self):
 		return random.choice(self.peers.keys())
 
 	def leastBusyPeer(self):
-		return min(self.peers, key=self.peers.get)
+		return self.peers.index(min(self.peers))
 
 	def getBackLog(self, peerId):
 		return self.peers[peerId]
