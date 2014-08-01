@@ -1,11 +1,15 @@
 import pickle
 from datetime import datetime
 
-class DataStore:
+class Datastore:
 
 	def __init__(self, name , mode='w'):
 		self.downloadedSegments = {}
 		self.file = open(name, mode)
+
+	def __init__(self):
+		self.downloadedSegments = {}
+		self.file = open("temp.txt", 'w')
 
 	def store(self, message):
 		_dumpMsg = {'data': message, 'log time' : datetime.now().strftime('%Y-%m-%d %H:%M:%S')}

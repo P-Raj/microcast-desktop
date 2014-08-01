@@ -1,7 +1,7 @@
 
 from JobScheduler import JobScheduler
 from Communicator import Communicator
-from Queues import LocalQueue
+
 
 # set up the distributed environment
 environment = Communicator()

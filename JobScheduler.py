@@ -5,7 +5,7 @@ from Communicator import Communicator
 from Message import *
 import Datastore
 import Queue
-
+import random
 
 class JobScheduler:
 
@@ -35,7 +35,7 @@ class JobScheduler:
 
 
     def handleAdvertisementQueue(self):
-        if not self.toBeAdvertised.Empty():
+        if not self.toBeAdvertised.empty():
             adMessage = self.toBeAdvertised.get()
             segmentId = adMessage.messageId
             if not self.dataHandler.getSegment():
@@ -43,7 +43,7 @@ class JobScheduler:
                 self.environment.send(adMessage.sender, reqMessage)
 
     def handleDownloadRequestQueue(self):
-        if not self.downloadRequests.Empty():
+        if not self.downloadRequests.empty():
             dwnldReqMessage = self.downloadRequests.get()
             dwnldReqMessage.download()
             self.dataHandler.addSegment(dwnldReqMessage.messageId, dwnldReqMessage.content)
@@ -51,7 +51,7 @@ class JobScheduler:
             # get response and send it to the inititor
 
     def handleRequestQueue(self):
-        if not self.requestQueue.Empty():
+        if not self.requestQueue.empty():
             reqMessage = self.requestQueue.get()
             responseMsg = reqMessage.getResponse()
             self.environment.send(responseMsg.receiver, responseMsg)
@@ -89,13 +89,13 @@ class JobScheduler:
 
 
             elif nonDetchoice == 1:
-                handleRequestQueue()
+                self.handleRequestQueue()
 
             elif nonDetchoice == 2:
-                handleDownloadRequestQueue()
+                self.handleDownloadRequestQueue()
 
             else:
-                handleAdvertisementQueue()
+                self.handleAdvertisementQueue()
 
     def microDownload(self):
 
