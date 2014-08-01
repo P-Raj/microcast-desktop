@@ -1,3 +1,4 @@
+
 import logging
 import sys
 
@@ -8,9 +9,14 @@ LEVELS = { 'debug':logging.DEBUG,
             'critical':logging.CRITICAL,
             }
 
+
 level_name = 'debug'
-level = LEVELS.get(level_name, logging.NOTSET)
-logging.basicConfig(level=level)
+setLevel(level_name)
+
+def setLevel(level_name):
+	global logging
+	level = LEVELS.get(level_name, logging.NOTSET)
+	logging.basicConfig(level=level)
 
 def info(message):
 	global logging

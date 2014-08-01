@@ -10,10 +10,16 @@ environment = Communicator()
 processId = environment.getMyId()
 Logging.info('Process id : ' + str(processId))
 
+if processId != 0:
+	Logging.setLevel('critical')
+
+else:
+	Logging.setLevel('debug')
 
 # set up job scheduler
 Logging.info('Setting up jobscheduler')
 procJobScheduler = JobScheduler(environment)
+
 
 procJobScheduler.runMicroDownload()
 procJobScheduler.runMicroNC()
