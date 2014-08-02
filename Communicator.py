@@ -18,8 +18,6 @@ class Communicator:
 		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
 
 	def send(self, toProc, message):
-		if toProc == 0:
-			raise Exception("Not sending to 0")
 		self.commWorld.isend(message, dest=toProc)
 
 	def receive(self, fromProc):

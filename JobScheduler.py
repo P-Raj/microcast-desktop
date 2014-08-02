@@ -109,7 +109,7 @@ class JobScheduler:
                         Logging.logProcessOp(processId=self.environment.procId,
                                              op="push",
                                              depQueue=self.downloadRequests,
-                                             _message=_message)
+                                             message=_message)
                         self.downloadRequests.put(_message)
 
                     if isinstance(_message, Message.AdvertisementMessage):
@@ -128,7 +128,7 @@ class JobScheduler:
                         Logging.logProcessOp(processId=self.environment.procId,
                                              op="push",
                                              depQueue=self.requestQueue,
-                                             _message=_message)
+                                             message=_message)
                         self.requestQueue.put(_message)
 
                     if isinstance(_message, Message.SegmentMessage):
@@ -143,7 +143,7 @@ class JobScheduler:
                         assert(self.environment.processId ==
                                self.SegmentAssignProcId)
 
-                        Logging.logProcessOP(processId=self.environment.procId
+                        Logging.logProcessOP(processId=self.environment.procId,
                                              op="receivedDownloadConfirmation")
 
                         self.peers.removeBackLog(_message.sender)
@@ -201,9 +201,14 @@ class JobScheduler:
                     msgProperty=None,
                     msgContent=self.segmentHandler.getMetadata(
                         requestSegmentId))
+
+		self.environment.send(peerId, requestSegment)		
                 self.segmentHandler.assignSegment(requestSegmentId)
                 self.peers.addBackLog(peerId)
-                Logging.info("Done sending")
+                Logging.logChannelOp(chanFrom=self.SegmentAssignProcId,
+				chanTo=peerId,
+				op="send",
+				message=requestSegment)
 
             else:
                 Logging.info("Waiting for feedback")

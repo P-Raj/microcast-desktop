@@ -20,22 +20,23 @@ class bcolors:
 level_name = 'debug'
 
 def logChannelOp(chanFrom, chanTo, op, message):
-	message = bcolors.HEADER + "C" + str(chanFrom) + str(to) + "." + str(op) 
+	_message = bcolors.HEADER + "C" + str(chanFrom) + str(chanTo) + "." + str(op) \
 				+ "(" + str(type(message)) + ")"
-	message = message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
+	_message = _message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
 
-	info(message)
+	info(_message)
 
-def logProcessOp(processId, op, depQueue = None, _message = None):
+def logProcessOp(processId, op, depQueue = None, message = None):
 
-	message = bcolors.HEADER + str(processId) + "." + str(op)
+	_message = bcolors.HEADER + str(processId) + "." + str(op)
 	
 	if depQueue:
-		message = message + "(" + str(depQueue) + "," + str(type(_message) + ")"
-	if _message:
-		message = message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
+		_message = _message + "(" + str(depQueue) + "," + str(type(_message)) + ")"
+	
+	if message:
+		_message = _message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
 
-	info(message)
+	info(_message)
 
 def setLevel(level_name):
 	global logging
