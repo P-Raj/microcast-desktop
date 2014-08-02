@@ -35,10 +35,10 @@ class JobScheduler:
         if not self.toBeAdvertised.empty():
             adMessage = self.toBeAdvertised.get()
             segmentId = adMessage.messageId
-            Logging.logProcessOP(self.environment.procId,
-                                 "pop",
-                                 self.toBeAdvertised,
-                                 adMessage)
+            Logging.logProcessOp(processId=self.environment.procId,
+                                 op="pop",
+                                 depQueue=self.toBeAdvertised,
+                                 message=adMessage)
             reqMessage = adMessage.getResponse()
 
             # broadcast
@@ -51,10 +51,10 @@ class JobScheduler:
         if not self.downloadRequests.empty():
             dwnldReqMessage = self.downloadRequests.get()
             dwnldReqMessage.download()
-            Logging.logProcessOP(self.environment.procId,
-                                 "pop",
-                                 self.downloadRequests,
-                                 dwnldReqMessage)
+            Logging.logProcessOp(processId=self.environment.procId,
+                                 op="pop",
+                                 depQueue=self.downloadRequests,
+                                 message=dwnldReqMessage)
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
@@ -65,10 +65,10 @@ class JobScheduler:
         if not self.requestQueue.empty():
             reqMessage = self.requestQueue.get()
             responseMsg = reqMessage.getResponse()
-            Logging.logProcessOP(self.environment.procId,
-                                 "pop",
-                                 self.requestQueue,
-                                 reqMessage)
+            Logging.logProcessOp(processId=self.environment.procId,
+                                 op="pop",
+                                 depQueue=self.requestQueue,
+                                 message=reqMessage)
             self.environment.send(responseMsg.receiver, responseMsg)
 
     def runMicroNC(self):
@@ -202,13 +202,14 @@ class JobScheduler:
                     msgContent=self.segmentHandler.getMetadata(
                         requestSegmentId))
 
-		self.environment.send(peerId, requestSegment)		
+                self.environment.send(peerId, requestSegment)
+
                 self.segmentHandler.assignSegment(requestSegmentId)
                 self.peers.addBackLog(peerId)
                 Logging.logChannelOp(chanFrom=self.SegmentAssignProcId,
-				chanTo=peerId,
-				op="send",
-				message=requestSegment)
+                                     chanTo=peerId,
+                                     op="send",
+                                     message=requestSegment)
 
             else:
                 Logging.info("Waiting for feedback")
