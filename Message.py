@@ -1,14 +1,15 @@
 from time import gmtime, strftime, sleep
 
+
 class Message(object):
 
-    def __init__(self, senderId, messageId, receiverId = None):
+    def __init__(self, senderId, messageId, receiverId):
         self.sender = senderId
         self.receiver = receiverId
         self.messageId = messageId
         self.createdTime = self.getCurrentTime()
-	self.property = None
-	self.content = None
+        self.property = None
+        self.content = None
 
     def getCurrentTime(self):
         return strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -35,46 +36,55 @@ class Message(object):
 
 class AdvertisementMessage(Message):
 
-    def __init__(self, senderId, messageId, receiverId = None):
-        Message.__init__(self,senderId, messageId, receiverId)
+    def __init__(self, senderId, messageId, receiverId):
+        Message.__init__(self, senderId, messageId, receiverId)
 
     def isAdvertisement(self):
         return True
 
     def getResponse(self):
-        _adResponse = RequestMessage(self.receiver, self.messageId, self.sender)
+        _adResponse = RequestMessage(self.receiver,
+                                     self.messageId,
+                                     self.sender)
         return _adResponse
+
 
 class RequestMessage(Message):
 
-    def __init__(self, senderId, messageId, receiverId = None):
-        Message.__init__(self,senderId, messageId, receiverId)
+    def __init__(self, senderId, messageId, receiverId):
+        Message.__init__(self, senderId, messageId, receiverId)
 
     def isRequest(self):
         return True
 
     def getResponse(self):
-        _response = SegmentMessage(self.receiver, self.messageId, self.sender)
+        _response = SegmentMessage(self.receiver,
+                                   self.messageId,
+                                   self.sender)
         return _response
+
 
 class DownloadRequestMessage(Message):
 
     def __init__(self, senderId, messageId, receiverId):
-        Message.__init__(self,senderId, messageId, receiverId)
+        Message.__init__(self, senderId, messageId, receiverId)
 
     def download(self):
         sleep(self.content['segmentDownloadtime'])
 
     def getResponse(self):
-	# is an advertisement
-	_responseAd = AdvertisementMessage(self.receiver, self.messageId, None)
-	return _responseAd
+        # is an advertisement
+        _responseAd = AdvertisementMessage(self.receiver,
+                                           self.messageId,
+                                           None)
+        return _responseAd
+
 
 class RequestResponseMessage(Message):
 
-    def __init__(self, senderId, messageId, receiverId = None):
+    def __init__(self, senderId, messageId, receiverId):
         # messageId is the messageId of the Request message
-        Message.__init__(self,senderId, messageId, receiverId)
+        Message.__init__(self, senderId, messageId, receiverId)
 
     def setStatus(self, status):
         self.status = status
@@ -84,8 +94,8 @@ class RequestResponseMessage(Message):
     def isRequestResponse(self):
         return True
 
+
 class SegmentMessage(Message):
 
-    def __init__(self, senderId, messageId, receiverId = None):
-        Message.__init__(self,senderId, messageId, receiverId)
-
+    def __init__(self, senderId, messageId, receiverId):
+        Message.__init__(self, senderId, messageId, receiverId)

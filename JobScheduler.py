@@ -8,50 +8,56 @@ import Queue
 import random
 import Logging
 
+
 class JobScheduler:
 
-        
     def __init__(self, environment):
- 	
-	self.MAX_BACKLOG = 5
-	self.SegmentAssignProcId = 0    
+        self.MAX_BACKLOG = 5
+        self.SegmentAssignProcId = 0
         self.environment = environment
         self.segmentHandler = SegmentHandler()
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore()
 
-    def isSegmentAssigner(self):    	
+    def isSegmentAssigner(self):
         return self.environment.procId == self.SegmentAssignProcId
 
     def runMicroDownload(self):
-	if self.isSegmentAssigner():
-		self.microDownload()
+        if self.isSegmentAssigner():
+            self.microDownload()
 
     def initLocalQueue(self):
         self.toBeAdvertised = Queue.Queue()
         self.requestQueue = Queue.Queue()
         self.downloadRequests = Queue.Queue()
 
-
     def handleAdvertisementQueue(self):
         if not self.toBeAdvertised.empty():
             adMessage = self.toBeAdvertised.get()
             segmentId = adMessage.messageId
-	    Logging.info('P' + str(self.environment.procId) + ' : AdQueue.pop()')
-	    reqMessage = adMessage.getResponse()
-	    # broadcast
-	    for _ in range(self.environment.totalProc):
-		if _ != self.SegmentAssignProcId:
-			reqMessage.receiver = _
-                	self.environment.send(_, reqMessage)
+            Logging.logProcessOP(self.environment.procId,
+                                 "pop",
+                                 self.toBeAdvertised,
+                                 adMessage)
+            reqMessage = adMessage.getResponse()
+
+            # broadcast
+            for _ in range(self.environment.totalProc):
+                if _ != self.SegmentAssignProcId:
+                    reqMessage.receiver = _
+                    self.environment.send(_, reqMessage)
 
     def handleDownloadRequestQueue(self):
         if not self.downloadRequests.empty():
             dwnldReqMessage = self.downloadRequests.get()
             dwnldReqMessage.download()
-	    Logging.info('P' + str(self.environment.procId)  + " : DownloadReqQueue.pop()")
-            self.dataHandler.addSegment(dwnldReqMessage.messageId, dwnldReqMessage.content)
-	    self.dataHandler.store(dwnldReqMessage)
+            Logging.logProcessOP(self.environment.procId,
+                                 "pop",
+                                 self.downloadRequests,
+                                 dwnldReqMessage)
+            self.dataHandler.addSegment(dwnldReqMessage.messageId,
+                                        dwnldReqMessage.content)
+            self.dataHandler.store(dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
             # get response and send it to the inititor
 
@@ -59,26 +65,32 @@ class JobScheduler:
         if not self.requestQueue.empty():
             reqMessage = self.requestQueue.get()
             responseMsg = reqMessage.getResponse()
-	    Logging.info('P' + str(self.environment.procId) + " : ReqQueue.pop()")
+            Logging.logProcessOP(self.environment.procId,
+                                 "pop",
+                                 self.requestQueue,
+                                 reqMessage)
             self.environment.send(responseMsg.receiver, responseMsg)
 
     def runMicroNC(self):
-	if self.environment.procId != self.SegmentAssignProcId:
-		self.microNC()
+        if self.environment.procId != self.SegmentAssignProcId:
+            self.microNC()
 
     def stopMicroNC(self):
 
-        if self.toBeAdvertised.empty() and self.requestQueue.empty() and self.downloadRequests.empty() and self.dataHandler.downlodedAll(4):
+        if self.toBeAdvertised.empty() and self.requestQueue.empty() and \
+           self.downloadRequests.empty() and \
+           self.dataHandler.downlodedAll(4):
             return True
 
         return False
 
-
     def microNC(self):
-        Logging.info( "microNC started by process "+str(self.environment.procId))
+
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="startMicroNC")
 
         self.initLocalQueue()
-        
+
         while not self.stopMicroNC():
 
             nonDetchoice = random.randrange(4)
@@ -88,29 +100,43 @@ class JobScheduler:
                 _message = self.environment.nonBlockingReceive()
 
                 if _message:
-		    Logging.info('C' + str(_message.sender) + str(_message.receiver) + ').receive' + str(type(_message)))
+                    Logging.logChannelOp(_message.sender,
+                                         _message.receiver,
+                                         'receive',
+                                         _message)
 
                     if isinstance(_message, Message.DownloadRequestMessage):
-			Logging.info('P' + str(self.environment.procId) + " : DwnldReqQueue.push()")
+                        Logging.logProcessOp(processId=self.environment.procId,
+                                             op="push",
+                                             depQueue=self.downloadRequests,
+                                             _message=_message)
                         self.downloadRequests.put(_message)
 
                     if isinstance(_message, Message.AdvertisementMessage):
                         # request the sender for the segments
                         if not self.dataHandler.getSegment(_message.messageId):
-			    Logging.info('C' + str(_message.sender) + str(_message.receiver) + ').send' + str(type(_message)))
                             _response = _message.getResponse()
-                            self.environment.send(_response.receiver, _response)
+                            Logging.logChannelOp(_message.sender,
+                                                 _message.receiver,
+                                                 'send',
+                                                 _response)
+                            self.environment.send(_response.receiver,
+                                                  _response)
 
                     if isinstance(_message, Message.RequestMessage):
                         # add this to the request queue
-			Logging.info('P' + str(self.environment.procId) + " : ReqQueue.push()")
+                        Logging.logProcessOp(processId=self.environment.procId,
+                                             op="push",
+                                             depQueue=self.requestQueue,
+                                             _message=_message)
                         self.requestQueue.put(_message)
 
                     if isinstance(_message, Message.SegmentMessage):
-			Logging.info('P' + str(self.environment.procId) + " received contents")
-                        self.dataHandler.addSegment(_message.messageId,_message.content)
-			self.dataHandler.store(_message)
-
+                        Logging.logProcessOp(processId=self.environment.procId,
+                                             op="receivedSegments")
+                        self.dataHandler.addSegment(_message.messageId,
+                                                    _message.content)
+                        self.dataHandler.store(_message)
 
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
@@ -120,17 +146,12 @@ class JobScheduler:
 
             else:
                 self.handleAdvertisementQueue()
-	
-	Logging.info("P" + str(self.environment.procId) + "stopped microNC")
-	raise Exception("Went outside loop")	
-
-    def createLog(self, from_ = None, to_ = None, operation = None, message = None, info = None):
-	chan = str(from_) + str(to_)
-	return "Channel : " + str(chan) + " Operation " + str(operation) + " Message " + str(message) + " Info : " + str(info)
 
     def microDownload(self):
 
-        Logging.info( "microDownload run by  " + str(self.environment.procId))
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="startMicroNC")
+
         self.segmentHandler.downloadMetadata()
         self.peers.initPeers(self.environment.totalProc)
 
@@ -138,40 +159,42 @@ class JobScheduler:
 
             peerId = self.peers.leastBusyPeer()
             peerBackLog = self.peers.getBackLog(peerId)
-	    feedback = None
+            feedback = None
 
             if peerBackLog < self.MAX_BACKLOG:
-		
-                requestSegmentId = self.segmentHandler.getNextUnassigned()
-                requestSegment = Message.DownloadRequestMessage(self.SegmentAssignProcId, requestSegmentId, peerId)
-                requestSegment.initMessage(msgProperty=None, 
-                    msgContent=self.segmentHandler.getMetadata(requestSegmentId))
 
-		Logging.info(self.createLog(from_ = self.SegmentAssignProcId, to_ = peerId, message = requestSegment, operation = "send", info = requestSegmentId))
-                self.environment.send(peerId, requestSegment)
-                
+                requestSegmentId = self.segmentHandler.getNextUnassigned()
+                requestSegment = Message.DownloadRequestMessage(
+                    self.SegmentAssignProcId,
+                    requestSegmentId,
+                    peerId)
+                requestSegment.initMessage(
+                    msgProperty=None,
+                    msgContent=self.segmentHandler.getMetadata(
+                        requestSegmentId))
                 self.segmentHandler.assignSegment(requestSegmentId)
                 self.peers.addBackLog(peerId)
-		Logging.info("Done sending")
-		feedback = self.environment.nonBlockingReceive()
+                Logging.info("Done sending")
+                feedback = self.environment.nonBlockingReceive()
 
             else:
-		Logging.info("Waiting for feedback")
+                Logging.info("Waiting for feedback")
                 feedback = self.environment.blockingReceive()
 
-	    if feedback:	    	    	
+        if feedback:
+            self.peers.removeBackLog(peerId, feedback.messageId)
 
-           	 self.peers.removeBackLog(peerId, feedback.messageId)
+            if not feedback.status:
 
-                 if not feedback.status:
-                
-                	self.segmentHandler.unassignSegment(requestSegmentId)
+                self.segmentHandler.unassignSegment(requestSegmentId)
+                requestSegmentId = self.segmentHandler.getNextUnassigned()
 
-                	requestSegmentId = self.segmentHandler.getNextUnassigned()
-                
-                	requestSegment = RequestMessage(self.SegmentAssignProcId, requestSegmentId)
-                	requestSegment.initMessage(msgProperty=None, 
-                    		msgContent=self.segmentHandler.getMetadata(requestSegmentId))
+                requestSegment = RequestMessage(self.SegmentAssignProcId,
+                                                requestSegmentId)
+                requestSegment.initMessage(
+                    msgProperty=None,
+                    msgContent=self.segmentHandler.getMetadata(
+                        requestSegmentId))
 
-                	self.environment.send(feedback.fromId, requestSegment)
-                	self.segmentHandler.assignSegment(requestSegmentId)
+                self.environment.send(feedback.fromId, requestSegment)
+                self.segmentHandler.assignSegment(requestSegmentId)
