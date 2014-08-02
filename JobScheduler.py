@@ -138,6 +138,36 @@ class JobScheduler:
                                                     _message.content)
                         self.dataHandler.store(_message)
 
+                    if isinstance(_message, Message.RequestResponseMessage):
+
+                        assert(self.environment.processId ==
+                               self.SegmentAssignProcId)
+
+                        Logging.logProcessOP(processId=self.environment.procId
+                                             op="receivedDownloadConfirmation")
+
+                        self.peers.removeBackLog(_message.sender)
+
+                        if not _message.status:
+
+                            self.segmentHandler.unassignSegment(
+                                _message.messageId)
+
+                            reqSegId = self.segmentHandler.getNextUnassigned()
+
+                            requestSegment = RequestMessage(
+                                self.SegmentAssignProcId,
+                                reqSegId)
+
+                            requestSegment.initMessage(
+                                msgProperty=None,
+                                msgContent=self.segmentHandler.getMetadata(
+                                    reqSegId))
+
+                            self.environment.send(feedback.fromId,
+                                                  requestSegment)
+                            self.segmentHandler.assignSegment(reqSegId)
+
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
 
@@ -159,7 +189,6 @@ class JobScheduler:
 
             peerId = self.peers.leastBusyPeer()
             peerBackLog = self.peers.getBackLog(peerId)
-            feedback = None
 
             if peerBackLog < self.MAX_BACKLOG:
 
@@ -175,26 +204,6 @@ class JobScheduler:
                 self.segmentHandler.assignSegment(requestSegmentId)
                 self.peers.addBackLog(peerId)
                 Logging.info("Done sending")
-                feedback = self.environment.nonBlockingReceive()
 
             else:
                 Logging.info("Waiting for feedback")
-                feedback = self.environment.blockingReceive()
-
-        if feedback:
-            self.peers.removeBackLog(peerId, feedback.messageId)
-
-            if not feedback.status:
-
-                self.segmentHandler.unassignSegment(requestSegmentId)
-                requestSegmentId = self.segmentHandler.getNextUnassigned()
-
-                requestSegment = RequestMessage(self.SegmentAssignProcId,
-                                                requestSegmentId)
-                requestSegment.initMessage(
-                    msgProperty=None,
-                    msgContent=self.segmentHandler.getMetadata(
-                        requestSegmentId))
-
-                self.environment.send(feedback.fromId, requestSegment)
-                self.segmentHandler.assignSegment(requestSegmentId)
