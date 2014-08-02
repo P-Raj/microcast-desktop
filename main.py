@@ -2,7 +2,7 @@
 from JobScheduler import JobScheduler
 from Communicator import Communicator
 import Logging
-
+import threading
 
 # set up the distributed environment
 #Logging.info('Setting up communicator')
@@ -20,6 +20,14 @@ else:
 #Logging.info('Setting up jobscheduler')
 procJobScheduler = JobScheduler(environment)
 
+mdThread = threading.Thread(target=procJobScheduler.runMicroDownload())
+mnThread = threading.Thread(target=procJobScheduler.runMicroNC())
 
-procJobScheduler.runMicroDownload()
-procJobScheduler.runMicroNC()
+mdThread.daemon = True
+mnThread.daemon = True
+
+mdThread.start()
+mnThread.start()
+mnThread.join()
+mdThread.join()
+

@@ -37,15 +37,20 @@ class JobScheduler:
             segmentId = adMessage.messageId
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue=self.toBeAdvertised,
+                                 depQueue="toBeAdvertised",
                                  message=adMessage)
             reqMessage = adMessage.getResponse()
 
             # broadcast
+	    # should change to bcast
             for _ in range(self.environment.totalProc):
                 if _ != self.SegmentAssignProcId:
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
+		    Logging.logChannelOp(self.environment.procId,
+					_,
+					"bcast",
+					reqMessage)
 
     def handleDownloadRequestQueue(self):
         if not self.downloadRequests.empty():
@@ -53,11 +58,15 @@ class JobScheduler:
             dwnldReqMessage.download()
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue=self.downloadRequests,
+                                 depQueue="downloadRequests",
                                  message=dwnldReqMessage)
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
+	    Logging.logProcessOp(processId=self.environment.procId,
+				op="push",
+				depQueue="toBeAdvertised",
+				message=dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
             # get response and send it to the inititor
 
@@ -67,13 +76,12 @@ class JobScheduler:
             responseMsg = reqMessage.getResponse()
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue=self.requestQueue,
+                                 depQueue="requestQueue",
                                  message=reqMessage)
             self.environment.send(responseMsg.receiver, responseMsg)
 
     def runMicroNC(self):
-        if self.environment.procId != self.SegmentAssignProcId:
-            self.microNC()
+        self.microNC()
 
     def stopMicroNC(self):
 
@@ -180,7 +188,7 @@ class JobScheduler:
     def microDownload(self):
 
         Logging.logProcessOp(processId=self.environment.procId,
-                             op="startMicroNC")
+                             op="startMicroDownload")
 
         self.segmentHandler.downloadMetadata()
         self.peers.initPeers(self.environment.totalProc)
