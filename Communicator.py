@@ -1,5 +1,7 @@
 from mpi4py import MPI
 from random import randrange, choice
+import Queue
+
 
 class Communicator:
 
@@ -10,6 +12,7 @@ class Communicator:
 		self.commWorld = MPI.COMM_WORLD
 		self.totalProc = self.commWorld.Get_size()
 		self.procId = self.commWorld.Get_rank()
+		self.loopChannel = Queue.Queue()
 
 	def getMyId(self):
 		return self.procId
@@ -18,9 +21,14 @@ class Communicator:
 		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
 
 	def send(self, toProc, message):
-		self.commWorld.isend(message, dest=toProc)
+		if self.getMyId() == toProc:
+			self.loopChannel.put(message)
+		else:
+			self.commWorld.isend(message, dest=toProc)
 
-	def receive(self, fromProc):
+	def _receive(self, fromProc):
+		if self.getMyId() == fromProc:
+			return self.loopChannel.get()
 		return self.commWorld.recv(source= fromProc)
 
 	def sendToRandom(self, message):
@@ -35,8 +43,12 @@ class Communicator:
 	def getNonEmptyChannels(self):
 		_channels = []
 		for procId in range(self.totalProc):
-			if procId != self.procId and self.commWorld.Iprobe(source = procId):
+			if procId!=self.getMyId() and self.commWorld.Iprobe(source = procId):
 				_channels.append(procId)
+
+		if not self.loopChannel.empty():
+			_channels.append(self.getMyId())
+
 		return _channels
 
 	def blockingReceive(self):
@@ -45,11 +57,11 @@ class Communicator:
 		nonEmptyChannels = self.getNonEmptyChannels()
 		while not nonEmptyChannels:
 			nonEmptyChannels = self.getNonEmptyChannels()
-		return self.receive(choice(nonEmptyChannels))
+		return self._receive(choice(nonEmptyChannels))
 
 	def nonBlockingReceive(self):
 
 		nonEmptyChannels = self.getNonEmptyChannels()
 		if nonEmptyChannels:
-			return self.receive(choice(nonEmptyChannels))
+			return self._receive(choice(nonEmptyChannels))
 		return None
