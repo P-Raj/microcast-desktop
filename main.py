@@ -15,27 +15,30 @@ def readCmdArgs():
 	
 	#default values
 	numSeg = 3
-	initiator = 2
+	#initiator = 2
 		
 	for opt,arg in opts:
 		if opt == '-h':
 			print "mpiexec -n <num of processes> python <main file>.py -s <number of segemnts> "
 			sys.exit()
 		elif opt in ("-s", "--num_seg"):
-			numSeg = arg
-			initiator = arg-1
-	return (numSeg,initiator)
+			numSeg = int(arg)
+			initiator = int(arg)-1
+	return numSeg
 	
-numSegs, initiator = readCmdArgs()
+numSegs = readCmdArgs()
 
 # set up the distributed environment
 environment = Communicator(numSegs)
 processId = environment.getMyId()
 
+initiator = environment.totalProc - 1
+
 Logging.setLevel('debug')
 
 procJobScheduler = JobScheduler(environment)
 
+print initiator
 
 if processId == initiator:
 	procJobScheduler.runMicroDownload()

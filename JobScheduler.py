@@ -7,14 +7,14 @@ import Datastore
 import Queue
 import random
 import Logging
-
+import time
 
 class JobScheduler:
 
     def __init__(self, environment):
         self.MAX_BACKLOG = 5
-        self.SegmentAssignProcId = 2
         self.environment = environment
+        self.SegmentAssignProcId = self.environment.totalProc - 1
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore()
@@ -67,6 +67,14 @@ class JobScheduler:
 				depQueue="toBeAdvertised",
 				message=dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
+	    _response = Message.RequestResponseMessage(senderId=self.environment.procId,
+					       messageId=dwnldReqMessage.messageId,
+					       receiverId=self.SegmentAssignProcId)
+	    self.environment.send(self.SegmentAssignProcId, _response)
+	    Logging.logChannelOp(self.environment.procId,
+				 self.SegmentAssignProcId,
+				 "sendConfirmation",
+				 _response)
             # get response and send it to the inititor
 
     def handleRequestQueue(self):
@@ -190,7 +198,7 @@ class JobScheduler:
                              op="startMicroDownload")
 
         self.segmentHandler.downloadMetadata()
-        self.peers.initPeers(self.environment.totalProc-1)
+        self.peers.initPeers(self.environment.totalProc - 1)
 
         while not self.segmentHandler.allAssigned():
 
@@ -219,4 +227,6 @@ class JobScheduler:
                                      message=requestSegment)
 
             else:
-                Logging.info("Waiting for feedback")
+                #Logging.info("Waiting for feedback")
+		#time.sleep(10)
+		pass
