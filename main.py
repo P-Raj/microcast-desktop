@@ -4,7 +4,8 @@ from Communicator import Communicator
 import Logging
 import sys
 import getopt
-
+from multiprocessing import Process
+import Terminal
 
 def readCmdArgs():
 	try:
@@ -32,13 +33,17 @@ numSegs = readCmdArgs()
 environment = Communicator(numSegs)
 processId = environment.getMyId()
 
+terminal = Terminal.Terminal(environment.totalProc, numSegs)
+
 initiator = environment.totalProc - 1
 
 Logging.setLevel('debug')
 
 procJobScheduler = JobScheduler(environment)
 
-print initiator
+process = Process (target = terminal.show())
+process.start()
+process.join()
 
 if processId == initiator:
 	procJobScheduler.runMicroDownload()
