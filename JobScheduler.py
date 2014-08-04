@@ -20,14 +20,10 @@ class JobScheduler:
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore()
-	self.history = History()
+        self.history = History()
 
     def isSegmentAssigner(self):
         return self.environment.procId == self.SegmentAssignProcId
-
-    def runMicroDownload(self):
-         self.history.addHistory(self.environment.getMyId(), "Start MicroDownload")
-         self.microDownload()
 
     def initLocalQueue(self):
         self.toBeAdvertised = Queue.Queue()
@@ -91,6 +87,39 @@ class JobScheduler:
                                  message=reqMessage)
             self.environment.send(responseMsg.receiver, responseMsg)
 
+    def handleDownloadRequestMessage(self, _message):
+
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="push",
+                             depQueue="downloadRequests",
+                             message=_message)
+        self.downloadRequests.put(_message)
+
+    def handleAdvertisementMessage(self, _message):
+
+        if not self.dataHandler.getSegment(_message.messageId):
+            _response = _message.getResponse()
+            Logging.logChannelOp(_message.sender,
+                                 _message.receiver,
+                                 'send',
+                                 _response)
+            self.environment.send(_response.receiver,
+                                  _response)
+
+    def handleRequestMessage(self, _message):
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="push",
+                             depQueue="requestQueue",
+                             message=_message)
+        self.requestQueue.put(_message)
+
+    def handleSegmentMessage(self, _message):
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="receivedSegments")
+        self.dataHandler.addSegment(_message.messageId,
+                                    _message.content)
+        self.dataHandler.store(_message)
+
     def runMicroNC(self):
         self.history.addHistory(self.environment.getMyId(), "Start MicroNC")
         self.microNC()
@@ -126,67 +155,22 @@ class JobScheduler:
                                          _message)
 
                     if isinstance(_message, Message.DownloadRequestMessage):
-                        Logging.logProcessOp(processId=self.environment.procId,
-                                             op="push",
-                                             depQueue="downloadRequests",
-                                             message=_message)
-                        self.downloadRequests.put(_message)
+                        self.handleDownloadRequestMessage(_message)
 
-                    if isinstance(_message, Message.AdvertisementMessage):
-                        # request the sender for the segments
-                        if not self.dataHandler.getSegment(_message.messageId):
-                            _response = _message.getResponse()
-                            Logging.logChannelOp(_message.sender,
-                                                 _message.receiver,
-                                                 'send',
-                                                 _response)
-                            self.environment.send(_response.receiver,
-                                                  _response)
+                    elif isinstance(_message, Message.AdvertisementMessage):
+                        self.handleAdvertisementMessage(_message)
 
-                    if isinstance(_message, Message.RequestMessage):
-                        # add this to the request queue
-                        Logging.logProcessOp(processId=self.environment.procId,
-                                             op="push",
-                                             depQueue="requestQueue",
-                                             message=_message)
-                        self.requestQueue.put(_message)
+                    elif isinstance(_message, Message.RequestMessage):
+                        self.handleRequestMessage(_message)
 
-                    if isinstance(_message, Message.SegmentMessage):
-                        Logging.logProcessOp(processId=self.environment.procId,
-                                             op="receivedSegments")
-                        self.dataHandler.addSegment(_message.messageId,
-                                                    _message.content)
-                        self.dataHandler.store(_message)
+                    elif isinstance(_message, Message.SegmentMessage):
+                        self.handleSegmentMessage(_message)
+
+                    else:
+                        raise Exception("Undefined message found in the channel")
 
                     if isinstance(_message, Message.RequestResponseMessage):
 
-                        assert(self.environment.processId ==
-                               self.SegmentAssignProcId)
-
-                        Logging.logProcessOP(processId=self.environment.procId,
-                                             op="receivedDownloadConfirmation")
-
-                        self.peers.removeBackLog(_message.sender)
-
-                        if not _message.status:
-
-                            self.segmentHandler.unassignSegment(
-                                _message.messageId)
-
-                            reqSegId = self.segmentHandler.getNextUnassigned()
-
-                            requestSegment = RequestMessage(
-                                self.SegmentAssignProcId,
-                                reqSegId)
-
-                            requestSegment.initMessage(
-                                msgProperty=None,
-                                msgContent=self.segmentHandler.getMetadata(
-                                    reqSegId))
-
-                            self.environment.send(feedback.fromId,
-                                                  requestSegment)
-                            self.segmentHandler.assignSegment(reqSegId)
 
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
@@ -196,6 +180,66 @@ class JobScheduler:
 
             else:
                 self.handleAdvertisementQueue()
+
+    def runMicroDownload(self):
+         self.history.addHistory(self.environment.getMyId(), "Start MicroDownload")
+         self.microDownload()
+
+    def handleRequestResponseMessage(self, _message):
+
+        assert(self.environment.processId == self.SegmentAssignProcId)
+
+        Logging.logProcessOP(processId=self.environment.procId,
+                             op="receivedDownloadConfirmation")
+
+        self.peers.removeBackLog(_message.sender)
+
+        if not _message.status:
+
+            self.segmentHandler.unassignSegment(
+                _message.messageId)
+
+            reqSegId = self.segmentHandler.getNextUnassigned()
+
+            requestSegment = Message.DownloadRequestMessage(
+                    self.SegmentAssignProcId,
+                    reqSegId,
+                    _message.sender)
+
+
+            requestSegment.initMessage(
+                msgProperty=None,
+                msgContent=self.segmentHandler.getMetadata(
+                    reqSegId))
+
+            self.environment.send(_message.sender,
+                                  requestSegment)
+
+            self.segmentHandler.assignSegment(reqSegId)
+
+    def sendDownloadRequest(self, peerId):
+
+        requestSegmentId = self.segmentHandler.getNextUnassigned()
+        requestSegment = Message.DownloadRequestMessage(
+            self.SegmentAssignProcId,
+            requestSegmentId,
+            peerId)
+
+        requestSegment.initMessage(
+            msgProperty=None,
+            msgContent=self.segmentHandler.getMetadata(
+                requestSegmentId))
+
+        self.environment.send(peerId, requestSegment)
+
+        self.segmentHandler.assignSegment(requestSegmentId)
+
+        self.peers.addBackLog(peerId)
+
+        Logging.logChannelOp(chanFrom=self.SegmentAssignProcId,
+                             chanTo=peerId,
+                             op="send",
+                             message=requestSegment)
 
     def microDownload(self):
 
@@ -207,31 +251,25 @@ class JobScheduler:
 
         while not self.segmentHandler.allAssigned():
 
-            peerId = self.peers.leastBusyPeer()
-            peerBackLog = self.peers.getBackLog(peerId)
+            nonDetChoice = random.randrange(2)
 
-            if peerBackLog < self.MAX_BACKLOG:
+            if nonDetChoice == 0:
 
-                requestSegmentId = self.segmentHandler.getNextUnassigned()
-                requestSegment = Message.DownloadRequestMessage(
-                    self.SegmentAssignProcId,
-                    requestSegmentId,
-                    peerId)
-                requestSegment.initMessage(
-                    msgProperty=None,
-                    msgContent=self.segmentHandler.getMetadata(
-                        requestSegmentId))
+                _message = self.environment.nonBlockingReceive()
 
-                self.environment.send(peerId, requestSegment)
+                if _message:
 
-                self.segmentHandler.assignSegment(requestSegmentId)
-                self.peers.addBackLog(peerId)
-                Logging.logChannelOp(chanFrom=self.SegmentAssignProcId,
-                                     chanTo=peerId,
-                                     op="send",
-                                     message=requestSegment)
+                    if isinstance(_message, Message.RequestResponseMessage):
+                        self.handleRequestResponseMessage(_message)
+
+                    else:
+                        raise Exception ("microDownload received undefined message")
 
             else:
-                #Logging.info("Waiting for feedback")
-		#time.sleep(10)
-		pass
+
+                peerId = self.peers.leastBusyPeer()
+                peerBackLog = self.peers.getBackLog(peerId)
+
+                if peerBackLog < self.MAX_BACKLOG:
+
+                    self.sendDownloadRequest()
