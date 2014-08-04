@@ -1,26 +1,28 @@
 import History
-
+import sys
 
 class TColumn:
 
-	tabSize = 10
 
 	def __init__(self, colNum, totalSegs):
+		self.tabSize = 20
 		self.segDownloaded = []
 		self.toalSegs = totalSegs
 		self.activities = []
 		self.activityCounter = 0
 		self.colNum = colNum
-		self.printSegs = True
+		self.printSegs = False
+		self.history = History.History()
 
 	def reachedEnd(self):
-		return self.activityCounter == len(self.activities)
+		return self.activityCounter == len(self.activities)-1
 
 	def getTabSize(self):
-		return " " * tabSize * self.colNum
+		return " " * self.tabSize * self.colNum
 
 	def update(self):
-		self.activities = History.getHistory(self.colNum)
+		self.activities = self.history.getHistory(self.colNum)
+		#print self.activities
 
 	def __gt__(self,other):
 		if not isinstance(other,TColumn):
@@ -31,14 +33,14 @@ class TColumn:
 		return self.getTopTimestamp() > other.getTopTimestamp()
 
 	def __lt__(self,other):
-		if not instance(other,TColumn):
+		if not isinstance(other,TColumn):
 			raise Exception("Incomparable")
 		if self.reachedEnd():
 			return False
 		return self.getTopTimestamp() < other.getTopTimestamp()
 
 	def getTopTimestamp(self):
-		return self.activities[self.activityCounter][1]
+		return self.activities[self.activityCounter][0]
 
 	def addSegment(self, segId):
 		self.segDownloaded.append(segId)
@@ -49,7 +51,7 @@ class TColumn:
 			self.printSegs = False
 		else:
 			self.activityCounter += 1
-			return self.getTabSize()  + self.activities[self.activityCounter-1]
+			return self.getTabSize()  + str(self.activities[self.activityCounter-1][1])
 
 
 class Terminal :
@@ -68,19 +70,20 @@ class Terminal :
 			col.update()
 
 	def show(self):
-		nColumn = self.findNextColumn()
-		if not nColumn:
-			print str(nColumn)
-			return True
-		return False
+		print "show"
+		while True:
+			#print [str(x) for x in self.columns]
+			#sys.exit(1)
+			nColumn = self.findNextColumn()
+			if  nColumn:
+				print str(nColumn)
+			else:
+				break
+
 
 	def findNextColumn(self):
 		nextCol = self.columns[0]
 		for col in self.columns[1:]:
 			if col < nextCol:
-				nextCol = col
-
-		if nextCol > self.column[0]:
-			return None
-
+				nextCol = col		
 		return nextCol

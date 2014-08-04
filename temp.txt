@@ -18,123 +18,31 @@ p8
 I3
 sS'receiver'
 p9
-I2
+I1
 sS'content'
 p10
 (dp11
 S'segmentFrom'
 p12
-I50
+I0
 sS'segmentTo'
 p13
-I60
+I10
 sS'segmentDownloadtime'
 p14
 I2
 ssS'messageId'
 p15
-I5
+I0
 sS'createdTime'
 p16
-S'2014-08-04 09:53:31'
+S'2014-08-04 11:23:36'
 p17
 sS'property'
 p18
 NsbsS'log time'
 p19
-S'2014-08-04 05:53:33'
-p20
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-DownloadRequestMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I3
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-(dp11
-S'segmentFrom'
-p12
-I60
-sS'segmentTo'
-p13
-I70
-sS'segmentDownloadtime'
-p14
-I2
-ssS'messageId'
-p15
-I6
-sS'createdTime'
-p16
-S'2014-08-04 09:53:31'
-p17
-sS'property'
-p18
-NsbsS'log time'
-p19
-S'2014-08-04 05:53:35'
-p20
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-DownloadRequestMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I3
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-(dp11
-S'segmentFrom'
-p12
-I90
-sS'segmentTo'
-p13
-I100
-sS'segmentDownloadtime'
-p14
-I2
-ssS'messageId'
-p15
-I9
-sS'createdTime'
-p16
-S'2014-08-04 09:53:31'
-p17
-sS'property'
-p18
-NsbsS'log time'
-p19
-S'2014-08-04 05:53:37'
+S'2014-08-04 07:23:38'
 p20
 s.(dp0
 S'data'
@@ -153,96 +61,24 @@ Rp6
 (dp7
 S'sender'
 p8
-I1
+I2
 sS'receiver'
 p9
-I2
+I1
 sS'content'
 p10
 NsS'messageId'
 p11
-I3
+I2
 sS'createdTime'
 p12
-S'2014-08-04 09:53:37'
+S'2014-08-04 11:23:38'
 p13
 sS'property'
 p14
 NsbsS'log time'
 p15
-S'2014-08-04 05:53:37'
-p16
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-SegmentMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I1
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-NsS'messageId'
-p11
-I8
-sS'createdTime'
-p12
-S'2014-08-04 09:53:37'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:37'
-p16
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-SegmentMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I1
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-NsS'messageId'
-p11
-I0
-sS'createdTime'
-p12
-S'2014-08-04 09:53:37'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:37'
+S'2014-08-04 07:23:38'
 p16
 s.(dp0
 S'data'
@@ -264,7 +100,7 @@ p8
 I0
 sS'receiver'
 p9
-I2
+I1
 sS'content'
 p10
 NsS'messageId'
@@ -272,128 +108,12 @@ p11
 I1
 sS'createdTime'
 p12
-S'2014-08-04 09:53:39'
+S'2014-08-04 11:23:38'
 p13
 sS'property'
 p14
 NsbsS'log time'
 p15
-S'2014-08-04 05:53:39'
+S'2014-08-04 07:23:38'
 p16
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-SegmentMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I0
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-NsS'messageId'
-p11
-I7
-sS'createdTime'
-p12
-S'2014-08-04 09:53:39'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:39'
-p16
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-SegmentMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I0
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-NsS'messageId'
-p11
-I2
-sS'createdTime'
-p12
-S'2014-08-04 09:53:39'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:39'
-p16
-s.(dp0
-S'data'
-p1
-ccopy_reg
-_reconstructor
-p2
-(cMessage
-SegmentMessage
-p3
-c__builtin__
-object
-p4
-Ntp5
-Rp6
-(dp7
-S'sender'
-p8
-I0
-sS'receiver'
-p9
-I2
-sS'content'
-p10
-NsS'messageId'
-p11
-I4
-sS'createdTime'
-p12
-S'2014-08-04 09:53:39'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:39'
-p16
-s.14-08-04 09:53:39'
-p13
-sS'property'
-p14
-NsbsS'log time'
-p15
-S'2014-08-04 05:53:39'
-p16
-s.
+s..

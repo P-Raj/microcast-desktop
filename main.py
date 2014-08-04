@@ -5,6 +5,7 @@ import Logging
 import sys
 import getopt
 from multiprocessing import Process
+import threading
 import Terminal
 
 def readCmdArgs():
@@ -37,16 +38,21 @@ terminal = Terminal.Terminal(environment.totalProc, numSegs)
 
 initiator = environment.totalProc - 1
 
-Logging.setLevel('debug')
+Logging.setLevel('critical')
 
 procJobScheduler = JobScheduler(environment)
 
-process = Process (target = terminal.show())
-process.start()
-process.join()
+#process = threading.Thread(target = terminal.show())
+#process.start()
+#process.join()
 
 if processId == initiator:
 	procJobScheduler.runMicroDownload()
+
 else:
 	procJobScheduler.runMicroNC()
 
+if processId == initiator:
+
+	terminal.update()
+	terminal.show()

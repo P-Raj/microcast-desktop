@@ -13,7 +13,7 @@ class History:
 
 	def getHistory(self, procId):
 		try:
-			fp = open(str(procId)+".history" , "r")
+			fp = open(str(procId) , "r")
 		except:
 			return []
 		hist = pickle.load(fp)

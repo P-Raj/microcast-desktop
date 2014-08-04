@@ -17,7 +17,7 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-level_name = 'debug'
+level_name = 'critical'
 
 def logChannelOp(chanFrom, chanTo, op, message):
 	_message = bcolors.HEADER + "C" + str(chanFrom) + str(chanTo) + "." + str(op) \
