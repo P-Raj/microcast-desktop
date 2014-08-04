@@ -7,7 +7,7 @@ import Datastore
 import Queue
 import random
 import Logging
-
+import History
 
 class JobScheduler:
 
@@ -23,6 +23,7 @@ class JobScheduler:
         return self.environment.procId == self.SegmentAssignProcId
 
     def runMicroDownload(self):
+         History.addHistory(self.environment.getMyId(), "Start MicroDownload")
          self.microDownload()
 
     def initLocalQueue(self):
@@ -80,6 +81,7 @@ class JobScheduler:
             self.environment.send(responseMsg.receiver, responseMsg)
 
     def runMicroNC(self):
+        History.addHistory(self.environment.getMyId(), "Start MicroNC")
         self.microNC()
 
     def stopMicroNC(self):

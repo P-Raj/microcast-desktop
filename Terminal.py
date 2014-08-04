@@ -1,3 +1,4 @@
+import Histroy
 
 class Terminal :
 
@@ -15,6 +16,12 @@ class Terminal :
 
 		def reachedEnd(self):
 			return self.activityCounter == len(self.activities)
+
+		def getTabSize(self):
+			return " " * tabSize * self.colNum
+
+		def update(self):
+			self.activities = History.getHistory(self.colNum)
 
 		def __gt__(self,other):
 			if not isinstance(other,TColumn):
@@ -36,18 +43,42 @@ class Terminal :
 
 		def addSegment(self, segId):
 			self.segDownloaded.append(segId)
-		
+
 		def __str__(self):
 			if self.printSegs:
-				return str(self.segDownloaded)
+				return self.getTabSize() + str(self.segDownloaded)
 				self.printSegs = False
 			else:
 				self.activityCounter += 1
-				return self.activities[self.activityCounter-1]
-		
-			
+				return self.getTabSize()  + self.activities[self.activityCounter-1]
 
-	def __init__(self, numProcs):
+	def __init__(self, numProcs, numSegs):
 		self.numProcs = numProcs
+		self.numSegs = numSegs
+		self.columns = []
+		self.initCoulumns()
 
-	
+	def initColumns(self):
+		self.columns = [TColumn(numProc, self.numSegs) for numProc in range(numProcs)]
+
+	def update(self):
+		for col in self.columns:
+			col.update()
+
+	def show(self):
+		nColumn = self.findNextColumn()
+		if not nColumn:
+			print str(nColumn)
+			return True
+		return False
+
+	def findNextColumn(self):
+		nextCol = self.columns[0]
+		for col in self.columns[1:]:
+			if col < nextCol:
+				nextCol = col
+
+		if nextCol > self.column[0]:
+			return None
+
+		return nextCol
