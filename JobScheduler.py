@@ -13,9 +13,9 @@ class JobScheduler:
 
     def __init__(self, environment):
         self.MAX_BACKLOG = 5
-        self.SegmentAssignProcId = 0
+        self.SegmentAssignProcId = 2
         self.environment = environment
-        self.segmentHandler = SegmentHandler()
+        self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore()
 
@@ -23,8 +23,7 @@ class JobScheduler:
         return self.environment.procId == self.SegmentAssignProcId
 
     def runMicroDownload(self):
-        if self.isSegmentAssigner():
-            self.microDownload()
+         self.microDownload()
 
     def initLocalQueue(self):
         self.toBeAdvertised = Queue.Queue()
@@ -44,7 +43,7 @@ class JobScheduler:
             # broadcast
 	    # should change to bcast
             for _ in range(self.environment.totalProc):
-                if _ != self.SegmentAssignProcId:
+                if _ != self.environment.getMyId():
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
 		    Logging.logChannelOp(self.environment.procId,
@@ -87,7 +86,7 @@ class JobScheduler:
 
         if self.toBeAdvertised.empty() and self.requestQueue.empty() and \
            self.downloadRequests.empty() and \
-           self.dataHandler.downlodedAll(4):
+           self.dataHandler.downlodedAll(self.environment.getNumSegs()):
             return True
 
         return False
@@ -116,7 +115,7 @@ class JobScheduler:
                     if isinstance(_message, Message.DownloadRequestMessage):
                         Logging.logProcessOp(processId=self.environment.procId,
                                              op="push",
-                                             depQueue=self.downloadRequests,
+                                             depQueue="downloadRequests",
                                              message=_message)
                         self.downloadRequests.put(_message)
 
@@ -135,7 +134,7 @@ class JobScheduler:
                         # add this to the request queue
                         Logging.logProcessOp(processId=self.environment.procId,
                                              op="push",
-                                             depQueue=self.requestQueue,
+                                             depQueue="requestQueue",
                                              message=_message)
                         self.requestQueue.put(_message)
 
@@ -191,7 +190,7 @@ class JobScheduler:
                              op="startMicroDownload")
 
         self.segmentHandler.downloadMetadata()
-        self.peers.initPeers(self.environment.totalProc)
+        self.peers.initPeers(self.environment.totalProc-1)
 
         while not self.segmentHandler.allAssigned():
 

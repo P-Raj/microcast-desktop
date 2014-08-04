@@ -2,32 +2,43 @@
 from JobScheduler import JobScheduler
 from Communicator import Communicator
 import Logging
-import threading
+import sys
+import getopt
+
+
+def readCmdArgs():
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "hs:", ["num_seg"])
+	except geopt.GetoptError:
+		print sys.argv[0] + ' -s <number of segments>'
+		sys.exit(2)
+	
+	#default values
+	numSeg = 3
+	initiator = 2
+		
+	for opt,arg in opts:
+		if opt == '-h':
+			print "mpiexec -n <num of processes> python <main file>.py -s <number of segemnts> "
+			sys.exit()
+		elif opt in ("-s", "--num_seg"):
+			numSeg = arg
+			initiator = arg-1
+	return (numSeg,initiator)
+	
+numSegs, initiator = readCmdArgs()
 
 # set up the distributed environment
-#Logging.info('Setting up communicator')
-environment = Communicator()
+environment = Communicator(numSegs)
 processId = environment.getMyId()
-#Logging.info('Process id : ' + str(processId))
 
-if processId != 1:
-	Logging.setLevel('debug')
+Logging.setLevel('debug')
 
-else:
-	Logging.setLevel('debug')
-
-# set up job scheduler
-#Logging.info('Setting up jobscheduler')
 procJobScheduler = JobScheduler(environment)
 
-mdThread = threading.Thread(target=procJobScheduler.runMicroDownload())
-mnThread = threading.Thread(target=procJobScheduler.runMicroNC())
 
-mdThread.daemon = True
-mnThread.daemon = True
-
-mdThread.start()
-mnThread.start()
-mnThread.join()
-mdThread.join()
+if processId == initiator:
+	procJobScheduler.runMicroDownload()
+else:
+	procJobScheduler.runMicroNC()
 

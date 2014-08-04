@@ -7,8 +7,9 @@ import random
 
 class SegmentHandler:
 
-    def __init__(self):
+    def __init__(self, numSegs):
         self.metadata = None
+	self.numSegs = numSegs
         self.segmentAssignList = []
         """
             self.metadata fields
@@ -26,8 +27,8 @@ class SegmentHandler:
 
     def downloadMetadata(self, url=None):
         # Static data as of now
-        self.metadata = {"numSegments": 4}
-        for i in range(4):
+        self.metadata = {"numSegments":self.numSegs }
+        for i in range(self.numSegs):
             self.metadata[i] = {"segmentDownloadtime": 2,
                                 "segmentFrom": 10*i,
                                 "segmentTo": 10*(i+1)}

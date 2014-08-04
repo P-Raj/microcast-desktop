@@ -5,8 +5,9 @@ import Queue
 
 class Communicator:
 
-	def __init__(self):
+	def __init__(self, numSegs):
 		self.setupCommunicator()
+		self.totalSegs = numSegs
 		
 	def setupCommunicator(self):
 		self.commWorld = MPI.COMM_WORLD
@@ -16,6 +17,9 @@ class Communicator:
 
 	def getMyId(self):
 		return self.procId
+
+	def getNumSegs(self):
+		return self.totalSegs
 
 	def informClient(self):
 		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
