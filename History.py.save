@@ -3,13 +3,12 @@ import datetime
 
 def startRecording(fileId):
 	fp = open(str(fileId)+".history", "w")
-	pickle.dump([],fp)
 	fp.close()
 
 def addHistory(processId, instruction, fileId):
-	existingHist = getHistory(fileId)
-	fp = open(str(fileId)+".history", "w")
-	existingHist.append([processId, datetime.datetime.now(), instruction])
+	existingHist = getHis
+	fp = open(str(fileId)+".history", "a")
+	existingHist.append([fileId, datetime.datetime.now(), instruction])
 	pickle.dump(existingHist, fp)
 	fp.close()
 

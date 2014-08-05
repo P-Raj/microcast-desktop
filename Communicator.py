@@ -21,6 +21,9 @@ class Communicator:
 	def getNumSegs(self):
 		return self.totalSegs
 
+	def setUpBarrier(self):
+		self.commWorld.Barrier()
+
 	def informClient(self):
 		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
 

@@ -1,0 +1,31 @@
+(lp0
+(lp1
+I0
+acdatetime
+datetime
+p2
+(S'\x07\xde\x08\x05\x05\r:\r")'
+p3
+tp4
+Rp5
+aS'Start MicroNC'
+p6
+aa(lp7
+I2
+ag2
+(S'\x07\xde\x08\x05\x05\r:\r&\xb6'
+p8
+tp9
+Rp10
+aS'Start MicroNC'
+p11
+aa(lp12
+I1
+ag2
+(S'\x07\xde\x08\x05\x05\r:\rD\xbe'
+p13
+tp14
+Rp15
+aS'Start MicroNC'
+p16
+aa.

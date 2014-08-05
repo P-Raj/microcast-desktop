@@ -8,7 +8,7 @@ import Queue
 import random
 import Logging
 import time
-from History import History
+import History
 
 
 class JobScheduler:
@@ -20,7 +20,7 @@ class JobScheduler:
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore()
-        self.history = History()
+        #self.history = History()
 
     def isSegmentAssigner(self):
         return self.environment.procId == self.SegmentAssignProcId
@@ -121,7 +121,7 @@ class JobScheduler:
         self.dataHandler.store(_message)
 
     def runMicroNC(self):
-        self.history.addHistory(self.environment.getMyId(), "Start MicroNC")
+        History.addHistory(self.environment.getMyId(), "Start MicroNC", self.environment.totalProc)
         self.microNC()
 
     def stopMicroNC(self):
@@ -181,7 +181,7 @@ class JobScheduler:
                 self.handleAdvertisementQueue()
 
     def runMicroDownload(self):
-         self.history.addHistory(self.environment.getMyId(), "Start MicroDownload")
+         History.addHistory(self.environment.getMyId(), "Start MicroDownload",self.environment.totalProc)
          self.microDownload()
 
     def handleRequestResponseMessage(self, _message):

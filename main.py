@@ -7,6 +7,7 @@ import getopt
 from multiprocessing import Process
 import threading
 import Terminal
+import History
 
 def readCmdArgs():
 	try:
@@ -34,17 +35,17 @@ numSegs = readCmdArgs()
 environment = Communicator(numSegs)
 processId = environment.getMyId()
 
-#terminal = Terminal.Terminal(environment.totalProc, numSegs)
 
 initiator = environment.totalProc - 1
+
+if initiator == processId:
+	History.startRecording(environment.totalProc)
+
+environment.setUpBarrier()
 
 Logging.setLevel('debug')
 
 procJobScheduler = JobScheduler(environment)
-
-#process = threading.Thread(target = terminal.show())
-#process.start()
-#process.join()
 
 if processId == initiator:
 	procJobScheduler.runMicroDownload()
@@ -52,7 +53,6 @@ if processId == initiator:
 else:
 	procJobScheduler.runMicroNC()
 
-#if processId == initiator:
-
-#	terminal.update()
-#	terminal.show()
+environment.setUpBarrier()
+if initiator == processId:
+	Terminal.Monitor(environment.totalProc).show()
