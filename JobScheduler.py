@@ -42,7 +42,7 @@ class JobScheduler:
 
             # broadcast
 	    # should change to bcast
-            for _ in range(self.environment.totalProc):
+            for _ in range(self.environment.totalProc-1):
                 if _ != self.environment.getMyId():
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
@@ -185,11 +185,7 @@ class JobScheduler:
          self.microDownload()
 
     def handleRequestResponseMessage(self, _message):
-
-        assert(self.environment.processId == self.SegmentAssignProcId)
-
-        Logging.logProcessOP(processId=self.environment.procId,
-                             op="receivedDownloadConfirmation")
+        
 
         self.peers.removeBackLog(_message.sender)
 
@@ -262,7 +258,7 @@ class JobScheduler:
                         self.handleRequestResponseMessage(_message)
 
                     else:
-                        raise Exception ("microDownload received undefined message")
+                        raise Exception ("microDownload received undefined message" + str(_message))
 
             else:
 

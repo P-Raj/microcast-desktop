@@ -34,11 +34,12 @@ numSegs = readCmdArgs()
 environment = Communicator(numSegs)
 processId = environment.getMyId()
 
-#terminal = Terminal.Terminal(environment.totalProc, numSegs)
 
+
+terminal = Terminal.Terminal(environment.totalProc, numSegs)
 initiator = environment.totalProc - 1
 
-Logging.setLevel('debug')
+Logging.setLevel('critical')
 
 procJobScheduler = JobScheduler(environment)
 
@@ -52,7 +53,7 @@ if processId == initiator:
 else:
 	procJobScheduler.runMicroNC()
 
-#if processId == initiator:
+if processId == initiator:
 
-#	terminal.update()
-#	terminal.show()
+	terminal.update()
+	terminal.show()

@@ -1,6 +1,7 @@
 
 import logging
 import sys
+import History
 
 LEVELS = { 'debug':logging.DEBUG,
             'info':logging.INFO,
@@ -17,12 +18,14 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-level_name = 'debug'
+level_name = 'critical'
 
 def logChannelOp(chanFrom, chanTo, op, message):
 	_message = bcolors.HEADER + "C" + str(chanFrom) + str(chanTo) + "." + str(op) \
-				+ "(" + str(message) + ")"
-
+				+ "(" + str(type(message)) + ")"
+	_message = _message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
+	
+	History.addHistory(chan _message)
 	info(_message)
 
 def logProcessOp(processId, op, depQueue = None, message = None):
@@ -30,8 +33,12 @@ def logProcessOp(processId, op, depQueue = None, message = None):
 	_message = bcolors.HEADER + str(processId) + "." + str(op)
 	
 	if depQueue:
-		_message = _message + "(" + str(depQueue) + "," + str(_message) + ")"
-
+		_message = _message + "(" + str(depQueue) + "," + str(type(_message)) + ")"
+	
+	if message:
+		_message = _message + "    " + bcolors.OKBLUE + "id" + str(message.messageId)
+	
+	History.addHistory(processId, _message)
 	info(_message)
 
 def setLevel(level_name):

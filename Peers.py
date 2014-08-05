@@ -25,5 +25,5 @@ class Peers:
     def addBackLog(self, peerId):
         self.peers[peerId] += 1
 
-    def removeBackLog(self, peer):
+    def removeBackLog(self, peerId):
         self.peers[peerId] -= 1

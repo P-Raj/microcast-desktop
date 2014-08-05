@@ -1,0 +1,164 @@
+(lp0
+(lp1
+cdatetime
+datetime
+p2
+(S'\x07\xde\x08\x05\x02+\x0e\x0e\xe8P'
+p3
+tp4
+Rp5
+aS'Start MicroNC'
+p6
+aa(lp7
+g2
+(S'\x07\xde\x08\x05\x02-\r\x06at'
+p8
+tp9
+Rp10
+aS'Start MicroNC'
+p11
+aa(lp12
+g2
+(S'\x07\xde\x08\x05\x02-\x1f\x06\xf1"'
+p13
+tp14
+Rp15
+aS'Start MicroNC'
+p16
+aa(lp17
+g2
+(S'\x07\xde\x08\x05\x02-9\r\xd1\xd9'
+p18
+tp19
+Rp20
+aS'Start MicroNC'
+p21
+aa(lp22
+g2
+(S'\x07\xde\x08\x05\x02.\r\x0c\xa2\xc6'
+p23
+tp24
+Rp25
+aS'Start MicroNC'
+p26
+aa(lp27
+g2
+(S'\x07\xde\x08\x05\x02.8\r\xd4\xc3'
+p28
+tp29
+Rp30
+aS'Start MicroNC'
+p31
+aa(lp32
+g2
+(S'\x07\xde\x08\x05\x020,\x019\x83'
+p33
+tp34
+Rp35
+aS'Start MicroNC'
+p36
+aa(lp37
+g2
+(S'\x07\xde\x08\x05\x022\x01\x01\xac\xf3'
+p38
+tp39
+Rp40
+aS'Start MicroNC'
+p41
+aa(lp42
+g2
+(S'\x07\xde\x08\x05\x023\x1c\x06\x80z'
+p43
+tp44
+Rp45
+aS'Start MicroNC'
+p46
+aa(lp47
+g2
+(S'\x07\xde\x08\x05\x024\x05\x05\xf0n'
+p48
+tp49
+Rp50
+aS'Start MicroNC'
+p51
+aa(lp52
+g2
+(S'\x07\xde\x08\x05\x024\x18\x0cL\xc8'
+p53
+tp54
+Rp55
+aS'Start MicroNC'
+p56
+aa(lp57
+g2
+(S'\x07\xde\x08\x05\x025\x0c\rr\xcf'
+p58
+tp59
+Rp60
+aS'Start MicroNC'
+p61
+aa(lp62
+g2
+(S"\x07\xde\x08\x05\x0259\x07'\xc1"
+p63
+tp64
+Rp65
+aS'Start MicroNC'
+p66
+aa(lp67
+g2
+(S'\x07\xde\x08\x05\x026\r\x03\x80\xda'
+p68
+tp69
+Rp70
+aS'Start MicroNC'
+p71
+aa(lp72
+g2
+(S'\x07\xde\x08\x05\x026;\x0bB\xd4'
+p73
+tp74
+Rp75
+aS'Start MicroNC'
+p76
+aa(lp77
+g2
+(S"\x07\xde\x08\x05\x04'\r\x05\t\x0f"
+p78
+tp79
+Rp80
+aS'Start MicroNC'
+p81
+aa(lp82
+g2
+(S'\x07\xde\x08\x05\x04($\r\xeb\x9f'
+p83
+tp84
+Rp85
+aS'Start MicroNC'
+p86
+aa(lp87
+g2
+(S'\x07\xde\x08\x05\x04)\x18\x02w7'
+p88
+tp89
+Rp90
+aS'Start MicroNC'
+p91
+aa(lp92
+g2
+(S'\x07\xde\x08\x05\x04)0\x00\x05&'
+p93
+tp94
+Rp95
+aS'Start MicroNC'
+p96
+aa(lp97
+g2
+(S'\x07\xde\x08\x05\x04*\x14\r\x82\xab'
+p98
+tp99
+Rp100
+aS'Start MicroNC'
+p101
+aa.
