@@ -169,8 +169,7 @@ class JobScheduler:
                     else:
                         raise Exception("Undefined message found in the channel")
 
-                    if isinstance(_message, Message.RequestResponseMessage):
-
+                
 
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
@@ -272,4 +271,4 @@ class JobScheduler:
 
                 if peerBackLog < self.MAX_BACKLOG:
 
-                    self.sendDownloadRequest()
+                    self.sendDownloadRequest(peerId)
