@@ -1,5 +1,6 @@
 import dmtcp
 import datetime
+import Queue
 
 class CheckpointHandler:
 
@@ -13,6 +14,7 @@ class CheckpointHandler:
 		self.cpAlert = False
 		self.cp = []
 		self.confirmReceived = {}
+		self.BQ = [Queue.Queue() for _ in range(self.totalProcs)]
 
 	def handleRequests(self, reqMsg):
 
@@ -33,10 +35,7 @@ class CheckpointHandler:
 		sel.cpAlert = True
 		self.cpTaken = True
 
-		startTime = datetime.datetime.now()
-		session = dmtcp.checkpoint()
-		self.cp.append((session,
-						datetime.datetime.now()-startTime))
+		self._takeCheckpoint()
 
 		newCpReqs = []
 
@@ -45,7 +44,6 @@ class CheckpointHandler:
 			newCpReqs.append(CheckpointMessage(self.procId,cpReq.initiatorId,x))
 
 		return newCpReqs
-
 
 	def _handleCpConfirmation(self, cpCnf):
 
@@ -58,16 +56,47 @@ class CheckpointHandler:
 																			False)
 
 	def completeCheckpointing(self):
+
 		return self.cpTaken and all(self.confirmReceived.values())
 
-	def updateDependency(self, depProcId):
+	def _updateDependency(self, depProcId):
 
 		if depProcId not in self.dependency:
 			self.dependency.append(depProcId)
 
 	def _takeCheckpoint(self):
-		pass
+
+		startTime = datetime.datetime.now()
+		session = dmtcp.checkpoint()
+		self.cp.append((session,
+						datetime.datetime.now()-startTime))
+
+	def messageConsumptionAllowed(self, message):
+
+		if message.bb and not self.cpAlert:
+			self.blockMessage(message)
+			return False
+
+		elif not message.bb and not self.cpAlert:
+			self._updateDependency(message.sender)
+			return True
+
+		elif self.cpAlert and not self.cpTaken:
+			self.blockMessage(message)
+			return False
+
+		elif self.cpTaken:
+			assert(all (x.empty() for x in self.BQ()))
+			return True
 
 	def blockMessage(self, blockMsg):
-		pass
 
+		self.BQ[blockMsg.sender].put(blockMsg)
+
+	def getBlockedMessages(self):
+
+		blockedMessages = []
+		for queue in self.BQ:
+			while not queue.empty:
+				blockedMessages.append(queue.get())
+		return blockedMessages
