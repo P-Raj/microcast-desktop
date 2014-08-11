@@ -1,6 +1,7 @@
 import dmtcp
 import datetime
 import Queue
+import resource
 
 class CheckpointHandler:
 
@@ -26,6 +27,7 @@ class CheckpointHandler:
 
 		elif reqMsg.type == "CheckpointConfirmation":
 			self._handleCpConfirmation(reqMsg)
+			return None, None
 
 		else:
 			raise Exception("Unknown checkpoint message")
@@ -69,7 +71,8 @@ class CheckpointHandler:
 		startTime = datetime.datetime.now()
 		session = dmtcp.checkpoint()
 		self.cp.append((session,
-						datetime.datetime.now()-startTime))
+						datetime.datetime.now()-startTime,
+						resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
 	def messageConsumptionAllowed(self, message):
 

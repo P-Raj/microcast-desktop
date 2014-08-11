@@ -1,14 +1,16 @@
 from mpi4py import MPI
 from random import randrange, choice
 import Queue
-
+from CheckpointController import CpHandler
+import resources
 
 class Communicator:
 
 	def __init__(self, numSegs):
 		self.setupCommunicator()
 		self.totalSegs = numSegs
-		
+		self.ckptCntrl = CpHandler()
+
 	def setupCommunicator(self):
 		self.commWorld = MPI.COMM_WORLD
 		self.totalProc = self.commWorld.Get_size()
@@ -24,19 +26,33 @@ class Communicator:
 	def setUpBarrier(self):
 		self.commWorld.Barrier()
 
-	def informClient(self):
-		print("You are process number #", self.procId , " of " ,self.totalProc, " processes")
-
 	def send(self, toProc, message):
+
+		if self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken:
+			message.setBB(True)
+		else:
+			message.setBB(False)
+
 		if self.getMyId() == toProc:
 			self.loopChannel.put(message)
 		else:
 			self.commWorld.isend(message, dest=toProc)
 
 	def _receive(self, fromProc):
-		if self.getMyId() == fromProc:
-			return self.loopChannel.get()
-		return self.commWorld.recv(source= fromProc)
+`
+		recvdMsg = self.loopChannel.get() if fromProc==self.getMyId() \
+											  else self.commWorld.recv(source=fromProc)
+
+
+		if type(recvdMsg)==type(CheckpointMessage):
+				self.ckptCntrl.handleRequest(recvdMsg)
+				return None
+
+		if self.ckptCntrl.messageConsumptionAllowed(recvdMsg):
+			# consume the message
+			return recvdMsg
+
+		return None
 
 	def sendToRandom(self, message):
 		self.send(randrange(self.totalProc), message)
@@ -46,7 +62,7 @@ class Communicator:
 
 	def receiveBroadcast(self, fromProc):
 		return self.commWorld.bcast(None, root=fromProc)
-	
+
 	def getNonEmptyChannels(self):
 		_channels = []
 		for procId in range(self.totalProc):
