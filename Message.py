@@ -11,6 +11,12 @@ class Message(object):
         self.property = None
         self.content = None
 
+    def getBB(self):
+        return self.bb
+
+    def setBB(self, bb):
+        self.bb = bb
+
     def getCurrentTime(self):
         return strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
@@ -49,7 +55,7 @@ class AdvertisementMessage(Message):
         return _adResponse
 
     def __str__(self):
-	return "AdvtsMsg" + str([self.messageId]) 
+	return "AdvtsMsg" + str([self.messageId])
 
 
 class RequestMessage(Message):
@@ -67,7 +73,7 @@ class RequestMessage(Message):
         return _response
 
     def __str__(self):
-	return "ReqMsg" + str([self.messageId]) 
+	return "ReqMsg" + str([self.messageId])
 
 
 class DownloadRequestMessage(Message):
@@ -86,7 +92,7 @@ class DownloadRequestMessage(Message):
         return _responseAd
 
     def __str__(self):
-	return "DwnldReqMsg" + str([self.messageId]) 
+	return "DwnldReqMsg" + str([self.messageId])
 
 
 class RequestResponseMessage(Message):
@@ -105,7 +111,7 @@ class RequestResponseMessage(Message):
         return True
 
     def __str__(self):
-	return "ReqResponseMsg" + str([self.messageId]) 
+	return "ReqResponseMsg" + str([self.messageId])
 
 
 class SegmentMessage(Message):
@@ -114,5 +120,5 @@ class SegmentMessage(Message):
         Message.__init__(self, senderId, messageId, receiverId)
 
     def __str__(self):
-	return "SegmentMsg" + str([self.messageId]) 
+	return "SegmentMsg" + str([self.messageId])
 
