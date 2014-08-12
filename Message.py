@@ -122,3 +122,11 @@ class SegmentMessage(Message):
     def __str__(self):
 	return "SegmentMsg" + str([self.messageId])
 
+class CheckpointMessage(Message):
+
+	def __init__(self, senderId, initiatorId, receiverId):
+		Message.__init__(self, senderId, initiatorId, receiverId)
+		self.initiatorId = initiatorId
+
+	def __str__(self):
+		return "CheckpointMsg" + str(self.initiatorId)

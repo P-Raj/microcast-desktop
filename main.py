@@ -54,5 +54,5 @@ else:
 	procJobScheduler.runMicroNC()
 
 environment.setUpBarrier()
-if initiator == processId:
-	Terminal.Monitor(environment.totalProc).show()
+#if initiator == processId:
+#	Terminal.Monitor(environment.totalProc).show()

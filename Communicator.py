@@ -2,14 +2,15 @@ from mpi4py import MPI
 from random import randrange, choice
 import Queue
 from CheckpointController import CpHandler
-import resources
+import resource
+from Message import CheckpointMessage
 
 class Communicator:
 
 	def __init__(self, numSegs):
 		self.setupCommunicator()
 		self.totalSegs = numSegs
-		self.ckptCntrl = CpHandler()
+		self.ckptCntrl = CpHandler(self.procId, self.totalProc)
 
 	def setupCommunicator(self):
 		self.commWorld = MPI.COMM_WORLD
@@ -39,9 +40,8 @@ class Communicator:
 			self.commWorld.isend(message, dest=toProc)
 
 	def _receive(self, fromProc):
-`
-		recvdMsg = self.loopChannel.get() if fromProc==self.getMyId() \
-											  else self.commWorld.recv(source=fromProc)
+
+		recvdMsg = self.loopChannel.get() if fromProc==self.getMyId() else self.commWorld.recv(source=fromProc)
 
 
 		if type(recvdMsg)==type(CheckpointMessage):

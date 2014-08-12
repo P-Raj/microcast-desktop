@@ -3,7 +3,7 @@ import datetime
 import Queue
 import resource
 
-class CheckpointHandler:
+class CpHandler:
 
 	def __init__(self, procId, totalProcs):
 
