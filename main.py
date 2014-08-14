@@ -6,7 +6,7 @@ import sys
 import getopt
 from multiprocessing import Process
 import threading
-import Terminal
+#import Terminal
 import History
 
 def readCmdArgs():

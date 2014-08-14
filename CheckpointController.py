@@ -3,6 +3,7 @@ import datetime
 import Queue
 import resource
 import random
+import Logging
 
 class CpHandler:
 
@@ -21,7 +22,7 @@ class CpHandler:
 	def handleRequests(self, reqMsg):
 
 		assert(type(reqMsg)==type(CheckpointMessage))
-
+		Logging.info("Req:" + str(reqMsg))
 		if reqMsg.type == "CheckpointRequest":
 			cpReqMsgs, cpConfirmMsg = self._handleCpRequest(reqMsg)
 			return cpReqMsgs, cpConfirmMsg
@@ -35,12 +36,14 @@ class CpHandler:
 
 	def checkpointInitAllowed(self):
 
-		if self.procId == 0 and random.randrange(10) == 0:
+		if self.procId == 0 and random.randrange(10) == 0 and self.cpEnabled and not self.cpAlert:
 			return True
 
 		return False
 
 	def checkpointInit(self):
+		
+		Logging.info("Cp init")
 
 		self.cpAlert = True
 		self.cpTaken = True
@@ -112,7 +115,7 @@ class CpHandler:
 			return False
 
 		elif self.cpTaken:
-			assert(all (x.empty() for x in self.BQ()))
+			assert(all (x.empty() for x in self.BQ))
 			return True
 
 	def blockMessage(self, blockMsg):

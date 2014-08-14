@@ -1,6 +1,7 @@
 
 import logging
 import sys
+from Message import CheckpointMessage
 
 LEVELS = { 'debug':logging.DEBUG,
             'info':logging.INFO,
@@ -18,12 +19,18 @@ class bcolors:
     ENDC = '\033[0m'
 
 level_name = 'debug'
+enable_only_checkpointing = True
 
 def logChannelOp(chanFrom, chanTo, op, message):
+
 	_message = bcolors.HEADER + "C" + str(chanFrom) + str(chanTo) + "." + str(op) \
 				+ "(" + str(message) + ")"
 
-	info(_message)
+	if enable_only_checkpointing:
+		if type(message) == type(CheckpointMessage):
+			info(_message)
+	else:
+		info(_message)
 
 def logProcessOp(processId, op, depQueue = None, message = None):
 
@@ -32,7 +39,11 @@ def logProcessOp(processId, op, depQueue = None, message = None):
 	if depQueue:
 		_message = _message + "(" + str(depQueue) + "," + str(_message) + ")"
 
-	info(_message)
+	if enable_only_checkpointing:
+		if type(message) == type(CheckpointMessage):
+			info(_message)
+	else:
+		info(_message)
 
 def setLevel(level_name):
 	global logging
