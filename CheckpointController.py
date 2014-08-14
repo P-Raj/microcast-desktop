@@ -4,6 +4,7 @@ import Queue
 import resource
 import random
 import Logging
+from Message import CheckpointReqMessage, CheckpointConfirmMessage
 
 class CpHandler:
 
@@ -21,13 +22,15 @@ class CpHandler:
 
 	def handleRequests(self, reqMsg):
 
-		assert(type(reqMsg)==type(CheckpointMessage))
+		assert(isinstance(reqMsg, CheckpointMessage))
+
 		Logging.info("Req:" + str(reqMsg))
-		if reqMsg.type == "CheckpointRequest":
+
+		if isinstance(reqMsg,CheckpointReqMessage):
 			cpReqMsgs, cpConfirmMsg = self._handleCpRequest(reqMsg)
 			return cpReqMsgs, cpConfirmMsg
 
-		elif reqMsg.type == "CheckpointConfirmation":
+		elif isinstance(reqMsg, CheckpointConfirmMessage):
 			self._handleCpConfirmation(reqMsg)
 			return None, None
 
@@ -42,7 +45,7 @@ class CpHandler:
 		return False
 
 	def checkpointInit(self):
-		
+
 		Logging.info("Cp init")
 
 		self.cpAlert = True
@@ -53,7 +56,8 @@ class CpHandler:
 		newCpReqs = []
 
 		for nrecs in (x for x in self.dependency):
-			newCpReqs.append(CheckpointMessage(self.procId,self.procId,x))
+			newCpReqs.append(CheckpointReqMessage(self.procId,self.procId,x,self.dependency)))
+			self.confirmReceived[x] = False
 
 		return newCpReqs
 
@@ -67,9 +71,13 @@ class CpHandler:
 
 		newCpReqs = []
 
-		for nrecs in (x for x in self.dependency \
-						if x not in cpReq.dependency):
-			newCpReqs.append(CheckpointMessage(self.procId,cpReq.initiatorId,x))
+		newDeps = (x for x in self.dependency \
+					if x not in cpReq.dependency)
+
+		for nrecs in newDeps:
+			newCpReqs.append(CheckpointReqMessage(self.procId,cpReq.initiatorId,x,_union(self.dependency,cpReq.dependency)))
+
+		newCpReqs.append(CheckpointConfirmMessage(self.procId,cpReq.initiatorId,newDeps)
 
 		return newCpReqs
 
@@ -129,3 +137,7 @@ class CpHandler:
 			while not queue.empty:
 				blockedMessages.append(queue.get())
 		return blockedMessages
+
+	def _union(listA, listB):
+
+		return list(set(listA+listB))

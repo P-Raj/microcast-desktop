@@ -128,5 +128,20 @@ class CheckpointMessage(Message):
 		Message.__init__(self, senderId, initiatorId, receiverId)
 		self.initiatorId = initiatorId
 
+class CheckpointReqMessage(CheckpointMessage):
+
+    def __init__(self, senderId, initiatorId, receiverId, depVector):
+        CheckpointMessage.__init__(self, senderId, initiatorId, receiverId)
+        self.dependency = depVector
+
+    def __str__(self):
+        return "CheckpointRequestMessage" + str(self.initiatorId)
+
+class CheckpointConfirmMessage(CheckpointMessage):
+
+    def __init__(self, senderId, receiverId, reqSentTo):
+        CheckpointMessage.__init__(self, senderId, None, receiverId)
+        self.reqSentTo = reqSentTo
+
 	def __str__(self):
-		return "CheckpointMsg" + str(self.initiatorId)
+		return "CheckpointCnfMsg from:" + str(self.sender)
