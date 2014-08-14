@@ -29,6 +29,9 @@ class Communicator:
 
 	def send(self, toProc, message):
 
+		if self.ckptCntrl.checkpointInitAllowed():
+			self.ckptCntrl.checkpointInit()
+
 		if self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken:
 			message.setBB(True)
 		else:
@@ -75,6 +78,7 @@ class Communicator:
 		return _channels
 
 	def blockingReceive(self):
+
 		#blocking wait function
 		#returns None if there is no message waiting
 		nonEmptyChannels = self.getNonEmptyChannels()
@@ -83,6 +87,9 @@ class Communicator:
 		return self._receive(choice(nonEmptyChannels))
 
 	def nonBlockingReceive(self):
+
+		if self.ckptCntrl.checkpointInitAllowed():
+			self.ckptCntrl.checkpointInit()
 
 		nonEmptyChannels = self.getNonEmptyChannels()
 		if nonEmptyChannels:

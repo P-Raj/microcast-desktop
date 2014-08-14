@@ -2,6 +2,7 @@ import dmtcp
 import datetime
 import Queue
 import resource
+import random
 
 class CpHandler:
 
@@ -32,9 +33,31 @@ class CpHandler:
 		else:
 			raise Exception("Unknown checkpoint message")
 
+	def checkpointInitAllowed(self):
+
+		if self.procId == 0 and random.randrange(10) == 0:
+			return True
+
+		return False
+
+	def checkpointInit(self):
+
+		self.cpAlert = True
+		self.cpTaken = True
+
+		self._takeCheckpoint()
+
+		newCpReqs = []
+
+		for nrecs in (x for x in self.dependency):
+			newCpReqs.append(CheckpointMessage(self.procId,self.procId,x))
+
+		return newCpReqs
+
+
 	def _handleCpRequest(self, cpReq):
 
-		sel.cpAlert = True
+		self.cpAlert = True
 		self.cpTaken = True
 
 		self._takeCheckpoint()
