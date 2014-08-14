@@ -4,7 +4,6 @@ import Queue
 import resource
 import random
 import Logging
-from Message import CheckpointReqMessage, CheckpointConfirmMessage, CheckpointMessage
 
 class CpHandler:
 
@@ -20,50 +19,42 @@ class CpHandler:
 		self.confirmReceived = {}
 		self.BQ = [Queue.Queue() for _ in range(self.totalProcs)]
 
-	def _union(self,listA, listB):
-		return list(set(listA+listB))
-
-
 	def handleRequests(self, reqMsg):
 
-		assert(isinstance(reqMsg, CheckpointMessage))
-
-		Logging.info("                                      Req:" + str(reqMsg))
-
-		if isinstance(reqMsg,CheckpointReqMessage):
+		assert(type(reqMsg)==type(CheckpointMessage))
+		Logging.info("Req:" + str(reqMsg))
+		if reqMsg.type == "CheckpointRequest":
 			cpReqMsgs = self._handleCpRequest(reqMsg)
-			return cpReqMsgs
+			return cpReqMsgs, cpConfirmMsg
 
-		elif isinstance(reqMsg, CheckpointConfirmMessage):
+		elif reqMsg.type == "CheckpointConfirmation":
 			self._handleCpConfirmation(reqMsg)
-			return None
+			return None, None
 
 		else:
 			raise Exception("Unknown checkpoint message")
 
 	def checkpointInitAllowed(self):
 
-		if self.procId == 0 and random.randrange(10) == 0 and self.cpEnabled and not self.cpAlert and len(self.dependency)>0:
+		if self.procId == 0 and random.randrange(10) == 0 and self.cpEnabled and not self.cpAlert:
 			return True
 
 		return False
 
 	def checkpointInit(self):
-
-		Logging.info("                                                     Cp init")
+		
+		Logging.info("Cp init")
 
 		self.cpAlert = True
 		self.cpTaken = True
-		
+
 		self._takeCheckpoint()
-		Logging.info("                                                     Completed" + str(self.dependency))
 
 		newCpReqs = []
 
 		for nrecs in (x for x in self.dependency):
-			newCpReqs.append(CheckpointReqMessage(self.procId,self.procId,nrecs,self.dependency))
-			self.confirmReceived[nrecs] = False
-
+			newCpReqs.append(CheckpointMessage(self.procId,self.procId,x))
+		
 		return newCpReqs
 
 
@@ -76,14 +67,11 @@ class CpHandler:
 
 		newCpReqs = []
 
-		newDeps = (x for x in self.dependency \
-					if x not in cpReq.dependency)
+		for nrecs in (x for x in self.dependency \
+						if x not in cpReq.dependency):
+			newCpReqs.append(CheckpointMessage(self.procId,cpReq.initiatorId,x,type="Req"))
 
-		for nrecs in newDeps:
-			newCpReqs.append(CheckpointReqMessage(self.procId,cpReq.initiatorId,nrecs,self._union(self.dependency,cpReq.dependency)))
-
-		newCpReqs.append(CheckpointConfirmMessage(self.procId,cpReq.initiatorId,newDeps))
-
+		newCpReqa.append(CheckpointMessage(self.procId))
 		return newCpReqs
 
 	def _handleCpConfirmation(self, cpCnf):
@@ -114,7 +102,7 @@ class CpHandler:
 						resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
 	def messageConsumptionAllowed(self, message):
-		
+
 		if message.bb and not self.cpAlert:
 			self.blockMessage(message)
 			return False
@@ -142,4 +130,3 @@ class CpHandler:
 			while not queue.empty:
 				blockedMessages.append(queue.get())
 		return blockedMessages
-

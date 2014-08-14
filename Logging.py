@@ -19,7 +19,7 @@ class bcolors:
     ENDC = '\033[0m'
 
 level_name = 'debug'
-enable_only_checkpointing = True
+enable_only_checkpointing = False
 
 def logChannelOp(chanFrom, chanTo, op, message):
 

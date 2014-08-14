@@ -26,11 +26,20 @@ class Communicator:
 
 	def setUpBarrier(self):
 		self.commWorld.Barrier()
+	
+	def trySendingCp(self):
+
+		if self.ckptCntrl.checkpointInitAllowed():
+			for msg in self.ckptCntrl.checkpointInit():
+				if self.getMyId() == msg.receiver:
+					self.loopChannel.put(msg)
+				else:
+					self.commWorld.isend(msg, dest=msg.receiver)
+
 
 	def send(self, toProc, message):
 
-		if self.ckptCntrl.checkpointInitAllowed():
-			self.ckptCntrl.checkpointInit()
+		self.trySendingCp()
 
 		if self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken:
 			message.setBB(True)
@@ -47,9 +56,10 @@ class Communicator:
 		recvdMsg = self.loopChannel.get() if fromProc==self.getMyId() else self.commWorld.recv(source=fromProc)
 
 
-		if type(recvdMsg)==type(CheckpointMessage):
-				self.ckptCntrl.handleRequest(recvdMsg)
-				return None
+		if isinstance(recvdMsg,CheckpointMessage):
+			print "                       hereee "
+			self.ckptCntrl.handleRequests(recvdMsg)
+			return None
 
 		if self.ckptCntrl.messageConsumptionAllowed(recvdMsg):
 			# consume the message
@@ -88,8 +98,7 @@ class Communicator:
 
 	def nonBlockingReceive(self):
 
-		if self.ckptCntrl.checkpointInitAllowed():
-			self.ckptCntrl.checkpointInit()
+		self.trySendingCp()
 
 		nonEmptyChannels = self.getNonEmptyChannels()
 		if nonEmptyChannels:
