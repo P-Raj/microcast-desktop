@@ -36,7 +36,7 @@ def logChannelOp(chanFrom, chanTo, op, message):
 	_op["message"] = message
 	LogStore.writeLog(_op)
 
-	LogViewer.updateTerminal()
+	#LogViewer.updateTerminal()
 
 	if enable_only_checkpointing:
 		if type(message) == type(CheckpointMessage):

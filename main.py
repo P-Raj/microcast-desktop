@@ -6,8 +6,6 @@ import sys
 import getopt
 from multiprocessing import Process
 import threading
-#import Terminal
-import History
 
 def readCmdArgs():
 	try:
@@ -18,7 +16,6 @@ def readCmdArgs():
 	
 	#default values
 	numSeg = 3
-	#initiator = 2
 		
 	for opt,arg in opts:
 		if opt == '-h':
@@ -37,9 +34,6 @@ processId = environment.getMyId()
 
 
 initiator = environment.totalProc - 1
-
-if initiator == processId:
-	History.startRecording(environment.totalProc)
 
 environment.setUpBarrier()
 

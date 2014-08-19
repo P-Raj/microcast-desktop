@@ -22,6 +22,7 @@ def readCmdArgs():
 	return processes
 
 maxLen = 0
+lineNum = 0
 
 def getProcLog(data):
 	global maxLen
@@ -39,7 +40,7 @@ def getChanLog(dict):
 
 
 def updateTerminal():
-
+	global lineNum
 	datas = LogStore.readLog()
 	printData = []
 	for data in datas:
@@ -47,12 +48,14 @@ def updateTerminal():
 			printData.append(getProcLog(data))
 		elif data["type"] == "channel":
 			printData.append(getChanLog(data))
-	print("\033c")
 
-	for data in printData:
-		print "\r", data[0]*(maxLen+2)*" ", data[1]			
+	printedLines = 0
+
+	for data in printData[lineNum:]:
+		print "\r",  data[0]*(maxLen+2)*" ", data[1]			
+		printedLines += 1
 	
-
+	lineNum += printedLines
 
 
 if __name__ == "__main__":
