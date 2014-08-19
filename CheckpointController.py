@@ -13,7 +13,7 @@ class CpHandler:
 		self.procId = procId
 		self.totalProcs = totalProcs
 		self.dependency = []
-		self.cpEnabled = True
+		self.cpEnabled = False
 		self.cpTaken = False
 		self.cpAlert = False
 		self.cp = []

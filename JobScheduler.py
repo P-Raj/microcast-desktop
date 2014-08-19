@@ -36,7 +36,7 @@ class JobScheduler:
             segmentId = adMessage.messageId
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue="toBeAdvertised",
+                                 depQueue="AdQ",
                                  message=adMessage)
             reqMessage = adMessage.getResponse()
 
@@ -57,14 +57,14 @@ class JobScheduler:
             dwnldReqMessage.download()
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue="downloadRequests",
+                                 depQueue="DwnReqQ",
                                  message=dwnldReqMessage)
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
 	    Logging.logProcessOp(processId=self.environment.procId,
 				op="push",
-				depQueue="toBeAdvertised",
+				depQueue="AdQ",
 				message=dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
 	    _response = Message.RequestResponseMessage(senderId=self.environment.procId,
@@ -83,7 +83,7 @@ class JobScheduler:
             responseMsg = reqMessage.getResponse()
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="pop",
-                                 depQueue="requestQueue",
+                                 depQueue="ReqQ",
                                  message=reqMessage)
             self.environment.send(responseMsg.receiver, responseMsg)
 
@@ -91,7 +91,7 @@ class JobScheduler:
 
         Logging.logProcessOp(processId=self.environment.procId,
                              op="push",
-                             depQueue="downloadRequests",
+                             depQueue="DwnReqQ",
                              message=_message)
         self.downloadRequests.put(_message)
 
@@ -109,7 +109,7 @@ class JobScheduler:
     def handleRequestMessage(self, _message):
         Logging.logProcessOp(processId=self.environment.procId,
                              op="push",
-                             depQueue="requestQueue",
+                             depQueue="ReQ",
                              message=_message)
         self.requestQueue.put(_message)
 

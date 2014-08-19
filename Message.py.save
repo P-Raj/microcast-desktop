@@ -73,7 +73,7 @@ class RequestMessage(Message):
         return _response
 
     def __str__(self):
-	return "ReqMsg" + str((self.messageId))
+	return "ReqMsg" + str([self.messageId])
 
 
 class DownloadRequestMessage(Message):
@@ -92,7 +92,7 @@ class DownloadRequestMessage(Message):
         return _responseAd
 
     def __str__(self):
-	return "DwnReqMsg" + str((self.messageId))
+	return "DwnldReqMsg" + str([self.messageId])
 
 
 class RequestResponseMessage(Message):
@@ -111,7 +111,7 @@ class RequestResponseMessage(Message):
         return True
 
     def __str__(self):
-	return "ReqResMsg" + str((self.messageId))
+	return "ReqResponseMsg" + str([self.messageId])
 
 
 class SegmentMessage(Message):
@@ -120,7 +120,7 @@ class SegmentMessage(Message):
         Message.__init__(self, senderId, messageId, receiverId)
 
     def __str__(self):
-	return "SegMsg" + str((self.messageId))
+	return "SegmentMsg" + str([self.messageId])
 
 class CheckpointMessage(Message):
 
@@ -135,7 +135,7 @@ class CheckpointReqMessage(CheckpointMessage):
         self.dependency = depVector
 
     def __str__(self):
-        return "CkptReqMsg" + str((self.initiatorId))
+        return "CheckpointRequestMessage" + str(self.initiatorId)
 
 class CheckpointConfirmMessage(CheckpointMessage):
 
@@ -144,4 +144,4 @@ class CheckpointConfirmMessage(CheckpointMessage):
         self.reqSentTo = reqSentTo
 
 	def __str__(self):
-		return "CkptCnfMsg" + str(self.sender)
+		return "CheckpointCnfMsg from:" + str(self.sender)
