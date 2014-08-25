@@ -12,6 +12,10 @@ class Communicator:
 		self.totalSegs = numSegs
 		self.ckptCntrl = CpHandler(self.procId, self.totalProc)
 
+		# assert variables
+		self.assertSendId = 0
+		self.assertReceiveId = [-1] * self.totalProc
+
 	def setupCommunicator(self):
 		self.commWorld = MPI.COMM_WORLD
 		self.totalProc = self.commWorld.Get_size()
@@ -31,6 +35,11 @@ class Communicator:
 
 		if self.ckptCntrl.checkpointInitAllowed():
 			for msg in self.ckptCntrl.checkpointInit():
+				
+				#asserts that message sent is in order i.e. m0 < m1 < m2
+				assert(self.assertSendId == msg.num)
+				self.assertSendId+=1
+				
 				if self.getMyId() == msg.receiver:
 					self.loopChannel.put(msg)
 				else:
@@ -40,6 +49,10 @@ class Communicator:
 	def send(self, toProc, message):
 
 		self.trySendingCp()
+		
+		#asserts that message sent is in order i.e. m0 < m1 < m2
+		assert(self.assertSendId == message.num)
+		self.assertSendId+=1
 
 		if self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken:
 			message.setBB(True)
@@ -55,9 +68,11 @@ class Communicator:
 
 		recvdMsg = self.loopChannel.get() if fromProc==self.getMyId() else self.commWorld.recv(source=fromProc)
 
+		#assert that the message received has a higher id than the previously received message
+		assert(self.assertReceiveId[recvdMsg.sender] < recvdMsg.num)
+		self.assertReceiveId[recvdMsg.sender] = recvdMsg.num
 
 		if isinstance(recvdMsg,CheckpointMessage):
-			print "                       hereee "
 			self.ckptCntrl.handleRequests(recvdMsg)
 			return None
 

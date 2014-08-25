@@ -3,6 +3,8 @@ from time import gmtime, strftime, sleep
 
 class Message(object):
 
+    numMsg = 0
+
     def __init__(self, senderId, messageId, receiverId):
         self.sender = senderId
         self.receiver = receiverId
@@ -10,6 +12,8 @@ class Message(object):
         self.createdTime = self.getCurrentTime()
         self.property = None
         self.content = None
+        self.num = Message.numMsg
+        Message.numMsg += 1
 
     def getBB(self):
         return self.bb

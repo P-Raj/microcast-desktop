@@ -36,12 +36,12 @@ class JobScheduler:
                                  op="pop",
                                  depQueue="AdQ",
                                  message=adMessage)
-            reqMessage = adMessage.getResponse()
 
             # broadcast
 	    # should change to bcast
             for _ in range(self.environment.totalProc-1):
                 if _ != self.environment.getMyId():
+	            reqMessage = adMessage.getResponse()
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
 		    Logging.logChannelOp(self.environment.procId,

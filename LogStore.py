@@ -1,8 +1,12 @@
 import pickle
+import LogViewer
 
 log_file_name = "store.log"
 
 def writeLog(data):
+	LogViewer.updateTerminal([data])
+	return
+
 	try:
 		with open(log_file_name,"a") as fp:
 			pickle.dump(obj=data,file=fp)
@@ -11,6 +15,7 @@ def writeLog(data):
 			pickle.dump(obj=data,file=fp)
 
 def readLog():
+	return
 	data = []
 	try:
 		with open(log_file_name,"r") as fp:
