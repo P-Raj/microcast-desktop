@@ -3,10 +3,10 @@ import getopt
 import sys
 
 def readCmdArgs():
-
+	
 	try:
 		opts,args = getopt.getopt(sys.argv[1:],"hp:",["process"])
-
+	
 	except getopt.GetoptError:
 		print sys.argv[0] + "-h (for help)"
 		sys.exit(2)
@@ -38,24 +38,23 @@ def getChanLog(dict):
 		return dict["to"],string
 	return dict["from"],string
 
+showProc = True
+showChannel = True
 
-
-def printTerminal(data):
-
-	if data["type"] == "process":
-		printData = getProcLog(data)
-	elif data["type"] == "channel":
-		printData = getChanLog(data)
-
-	sys.stdout.write( "%s %s" %(printData[0]*20*" ", printData[1]))
-	sys.stdout.flush()
-
+def updateTerminal(datas):
+		for data in datas:
+			if data["type"] == "process" and showProc:
+				printData = getProcLog(data)
+			elif data["type"] == "channel" and showChannel:
+				printData = getChanLog(data)
+		
+		print  printData[0]*(maxLen+2)*" ", printData[1]
+		
 
 if __name__ == "__main__":
 
 	processes = readCmdArgs()
-	datas = []
-	#LogStore.readLog()
+	datas = LogStore.readLog()
 	printData = []
 	for data in datas:
 		if data["type"] == "process":
@@ -66,6 +65,6 @@ if __name__ == "__main__":
 				printData.append(getChanLog(data))
 
 	for data in printData:
-		print data[0]*(maxLen+2)*" ", data[1]
-
+		print data[0]*(maxLen+2)*" ", data[1]			
+	
 

@@ -3,7 +3,7 @@ import matplotlib.pyplot as pyplot
 
 def plot(x, name="fig.png"):
 
-	pyplot.plot([0.1*i for i in range(len(x))], x)
+	pyplot.plot(x)
 	pyplot.savefig(name)
 
 def readFile(filename):
@@ -14,4 +14,5 @@ def readFile(filename):
 
 if __name__ == "__main__":
 
-	plot(readFile(),"")
+	for i in range(4):
+		plot(readFile("memory" + str(i) + ".dump"),str(i) + ".png")

@@ -3,13 +3,10 @@ from datetime import datetime
 
 class Datastore:
 
-	def __init__(self, name , mode='w'):
+	def __init__(self, totalSegs):
 		self.downloadedSegments = {}
-		self.file = open(name, mode)
-
-	def __init__(self):
-		self.downloadedSegments = {}
-		self.file = None#open("temp.txt", 'w')
+		self.totalSegs = totalSegs
+		#self.file = open(name, mode)
 
 	def store(self, message):
 		_dumpMsg = {'data': message, 'log time' : datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -22,18 +19,14 @@ class Datastore:
 		self.downloadedSegments[segmentId] = segmentProperty
 	
 	def __str__(self):
-		return str(sorted(self.downloadedSegments.keys()))
-		l = ['-']*max(self.downloadedSegments.keys())
-		for j in self.downloadedSegments.keys():
-			l[j-1] = 'X'
-		return str(l)
+		return str(float(len(self.downloadedSegments.keys()))/self.totalSegs * 100)
 
 	def getSegment(self, segmentId):
 		self.downloadedSegments.get(segmentId,None)
 
-	def downlodedAll(self, numSegments):
+	def downlodedAll(self):
 		#print self.downloadedSegments.keys()
-		for x in range(numSegments):
+		for x in range(self.totalSegs):
 			if x not in self.downloadedSegments.keys():
 				return False
 		return True	

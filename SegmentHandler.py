@@ -38,7 +38,8 @@ class SegmentHandler:
         return self.metadata[segmentId]
 
     def downloadSegment(self, segmentId):
-        time.sleep(self.metadata[segmentId])
+	return 
+        #time.sleep(self.metadata[segmentId])
 
     def allAssigned(self):
         return all(self.segmentAssignList)

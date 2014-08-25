@@ -1,3 +1,4 @@
+
 from JobScheduler import JobScheduler
 from Communicator import Communicator
 import Logging
@@ -5,7 +6,7 @@ import sys
 import getopt
 from multiprocessing import Process
 import threading
-from time import sleep
+from __future__ import print_function
 
 def readCmdArgs():
 	try:
@@ -33,11 +34,18 @@ environment = Communicator(numSegs)
 processId = environment.getMyId()
 
 
-
 initiator = environment.totalProc - 1
+
+for i in range(101):
+  str1="Downloading File FooFile.txt [{}%]".format(i)
+  back="\b"*len(str1)
+  print(str1, end="")
+  sleep(0.1)
+  print(back, end="")
+
 environment.setUpBarrier()
 
- 
+return 
 
 Logging.setLevel('debug')
 
@@ -52,4 +60,3 @@ else:
 environment.setUpBarrier()
 #if initiator == processId:
 #	Terminal.Monitor(environment.totalProc).show()
-

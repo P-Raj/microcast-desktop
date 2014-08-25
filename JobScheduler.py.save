@@ -9,8 +9,6 @@ import random
 import Logging
 import time
 import LogViewer
-import subprocess
-import os
 
 class JobScheduler:
 
@@ -21,19 +19,7 @@ class JobScheduler:
         self.SegmentAssignProcId = self.environment.totalProc - 1
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
-        self.dataHandler = Datastore.Datastore(self.environment.getNumSegs())
-	self.memoryFile = "memory" + str(self.environment.getMyId()) + ".dump"
-	open(self.memoryFile,"w").close()
-	if self.isSegmentAssigner():
-		self.l = [100] * 10000
-
-    def dumpMemory(self):
-    	out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
-    	stdout=subprocess.PIPE).communicate()[0].split(b'\n')
-    	vsz_index = out[0].split().index(b'RSS')
-    	mem = float(out[1].split()[vsz_index]) / 1024
-    	with open(self.memoryFile,"a") as fp:
-		fp.write(str(mem) + "\n")
+        self.dataHandler = Datastore.Datastore()
 
     def isSegmentAssigner(self):
 
@@ -81,9 +67,7 @@ class JobScheduler:
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
-            #print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
-
-	    Logging.logProcessOp(processId=self.environment.procId,
+            Logging.logProcessOp(processId=self.environment.procId,
 				op="push",
 				depQueue="AdQ",
 				message=dwnldReqMessage)
@@ -140,19 +124,17 @@ class JobScheduler:
         self.dataHandler.addSegment(_message.messageId,
                                     _message.content)
         self.dataHandler.store(_message)
-        #print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
-
 
     def runMicroNC(self):
         self.microNC()
 
     def stopMicroNC(self):
-	
+
         if self.toBeAdvertised.empty() and self.requestQueue.empty() and \
            self.downloadRequests.empty() and \
-           self.dataHandler.downlodedAll():
+           self.dataHandler.downlodedAll(self.environment.getNumSegs()):
             return True
-	
+
         return False
 
     def microNC(self):
@@ -164,8 +146,9 @@ class JobScheduler:
 
         while not self.stopMicroNC():
 
-	    self.dumpMemory()
-            nonDetchoice = random.randrange(4)
+	    if self.environment.getMyId() == 0:
+
+         nonDetchoice = random.randrange(4)
 
             if nonDetchoice == 0:
 
@@ -269,7 +252,6 @@ class JobScheduler:
         while not self.segmentHandler.allAssigned():
 
             nonDetChoice = random.randrange(2)
-	    self.dumpMemory()
 
             if nonDetChoice == 0:
 
