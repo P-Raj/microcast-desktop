@@ -39,6 +39,7 @@ def getChanLog(dict):
 	return dict["from"],string
 
 
+
 def printTerminal(data):
 
 	if data["type"] == "process":
@@ -46,7 +47,7 @@ def printTerminal(data):
 	elif data["type"] == "channel":
 		printData = getChanLog(data)
 
-	print printData
+	#print printData[0]*20*" ", printData[1]
 
 
 

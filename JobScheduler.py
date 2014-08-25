@@ -67,7 +67,9 @@ class JobScheduler:
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
-            Logging.logProcessOp(processId=self.environment.procId,
+            print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
+
+	    Logging.logProcessOp(processId=self.environment.procId,
 				op="push",
 				depQueue="AdQ",
 				message=dwnldReqMessage)
@@ -124,6 +126,8 @@ class JobScheduler:
         self.dataHandler.addSegment(_message.messageId,
                                     _message.content)
         self.dataHandler.store(_message)
+        print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
+
 
     def runMicroNC(self):
         self.microNC()
@@ -146,7 +150,6 @@ class JobScheduler:
 
         while not self.stopMicroNC():
 
-	    if self.environment.getMyId() == 0:
 
             nonDetchoice = random.randrange(4)
 
