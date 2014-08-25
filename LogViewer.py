@@ -3,10 +3,10 @@ import getopt
 import sys
 
 def readCmdArgs():
-	
+
 	try:
 		opts,args = getopt.getopt(sys.argv[1:],"hp:",["process"])
-	
+
 	except getopt.GetoptError:
 		print sys.argv[0] + "-h (for help)"
 		sys.exit(2)
@@ -23,7 +23,6 @@ def readCmdArgs():
 
 maxLen = 0
 lineNum = 0
-printEnabled = False
 
 def getProcLog(data):
 	global maxLen
@@ -40,39 +39,15 @@ def getChanLog(dict):
 	return dict["from"],string
 
 
-def updateTerminal(datas=None):
-	global lineNum
+def printTerminal(data):
 
-	if not datas:
-		return 
+	if data["type"] == "process":
+		printData = getProcLog(data)
+	elif data["type"] == "channel":
+		printData = getChanLog(data)
 
-	else:
-		for data in datas:
-			if data["type"] == "process":
-				printData = getProcLog(data)
-			elif data["type"] == "channel":
-				printData = getChanLog(data)
-		
-		print  printData[0]*(maxLen+2)*" ", printData[1]
-		return	
+	print printData
 
-
-		
-	datas = LogStore.readLog()
-	printData = []
-	for data in datas:
-		if data["type"] == "process":
-			printData.append(getProcLog(data))
-		elif data["type"] == "channel":
-			printData.append(getChanLog(data))
-
-	printedLines = 0
-
-	for data in printData[lineNum:]:
-		print "\r",  data[0]*(maxLen+2)*" ", data[1]			
-		printedLines += 1
-	
-	lineNum += printedLines
 
 
 if __name__ == "__main__":
@@ -89,6 +64,6 @@ if __name__ == "__main__":
 				printData.append(getChanLog(data))
 
 	for data in printData:
-		print data[0]*(maxLen+2)*" ", data[1]			
-	
+		print data[0]*(maxLen+2)*" ", data[1]
+
 

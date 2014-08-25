@@ -147,7 +147,6 @@ class JobScheduler:
         while not self.stopMicroNC():
 
 	    if self.environment.getMyId() == 0:
-		LogViewer.updateTerminal()
 
             nonDetchoice = random.randrange(4)
 
