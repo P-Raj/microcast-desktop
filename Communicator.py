@@ -8,6 +8,7 @@ from Message import CheckpointMessage
 class Communicator:
 
 	def __init__(self, numSegs):
+
 		self.setupCommunicator()
 		self.totalSegs = numSegs
 		self.ckptCntrl = CpHandler(self.procId, self.totalProc)
@@ -17,29 +18,33 @@ class Communicator:
 		self.assertReceiveId = [-1] * self.totalProc
 
 	def setupCommunicator(self):
+
 		self.commWorld = MPI.COMM_WORLD
 		self.totalProc = self.commWorld.Get_size()
 		self.procId = self.commWorld.Get_rank()
 		self.loopChannel = Queue.Queue()
 
 	def getMyId(self):
+
 		return self.procId
 
 	def getNumSegs(self):
+
 		return self.totalSegs
 
 	def setUpBarrier(self):
+
 		self.commWorld.Barrier()
-	
+
 	def trySendingCp(self):
 
 		if self.ckptCntrl.checkpointInitAllowed():
 			for msg in self.ckptCntrl.checkpointInit():
-				
+
 				#asserts that message sent is in order i.e. m0 < m1 < m2
 				assert(self.assertSendId == msg.num)
 				self.assertSendId+=1
-				
+
 				if self.getMyId() == msg.receiver:
 					self.loopChannel.put(msg)
 				else:
@@ -49,20 +54,15 @@ class Communicator:
 	def send(self, toProc, message):
 
 		self.trySendingCp()
-		
+
 		#asserts that message sent is in order i.e. m0 < m1 < m2
 		assert(self.assertSendId == message.num)
 		self.assertSendId+=1
 
-		if self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken:
-			message.setBB(True)
-		else:
-			message.setBB(False)
+		message.setBB(self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken)
 
-		if self.getMyId() == toProc:
-			self.loopChannel.put(message)
-		else:
-			self.commWorld.isend(message, dest=toProc)
+		if self.getMyId() == toProc: self.loopChannel.put(message)
+		else: self.commWorld.isend(message, dest=toProc)
 
 	def _receive(self, fromProc):
 
@@ -77,38 +77,39 @@ class Communicator:
 			return None
 
 		if self.ckptCntrl.messageConsumptionAllowed(recvdMsg):
-			# consume the message
-			return recvdMsg
+			return recvdMsg # consume the message
 
 		return None
 
 	def sendToRandom(self, message):
+
 		self.send(randrange(self.totalProc), message)
 
 	def sendBroadcast(self, message):
+
 		self.commWorld.bcast(message, root = self.procId)
 
 	def receiveBroadcast(self, fromProc):
+
 		return self.commWorld.bcast(None, root=fromProc)
 
 	def getNonEmptyChannels(self):
-		_channels = []
-		for procId in range(self.totalProc):
-			if procId!=self.getMyId() and self.commWorld.Iprobe(source = procId):
-				_channels.append(procId)
 
-		if not self.loopChannel.empty():
-			_channels.append(self.getMyId())
+		_channels = [procId for procId in range(self.totalProc) if procId!=self.getMyId() and self.commWorld.Iprobe(source = procId)]
+
+		if not self.loopChannel.empty(): _channels.append(self.getMyId())
 
 		return _channels
 
 	def blockingReceive(self):
-
 		#blocking wait function
 		#returns None if there is no message waiting
+
 		nonEmptyChannels = self.getNonEmptyChannels()
+
 		while not nonEmptyChannels:
 			nonEmptyChannels = self.getNonEmptyChannels()
+
 		return self._receive(choice(nonEmptyChannels))
 
 	def nonBlockingReceive(self):
@@ -116,6 +117,6 @@ class Communicator:
 		self.trySendingCp()
 
 		nonEmptyChannels = self.getNonEmptyChannels()
-		if nonEmptyChannels:
-			return self._receive(choice(nonEmptyChannels))
+
+		if nonEmptyChannels: return self._receive(choice(nonEmptyChannels))
 		return None

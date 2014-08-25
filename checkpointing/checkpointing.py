@@ -16,7 +16,7 @@ class CpMessage:
 
 class CpHandler:
 
-	def __init__(self, processId, numProcs, cpInitiator, cpEnabled=False):
+	def __init__(self, processId, numProcs, cpInitiator, communicator, cpEnabled=False):
 		self.processId = processId
 		self.numProcs = numProcs
 		self.cpEnabled = cpEnabled
@@ -24,6 +24,7 @@ class CpHandler:
 		self.cpInitiator = cpInitiator
 		self.dependency = []
 		self.BQ = self.initBQ()
+		self.communicator = communicator
 
 	def addDependency(self, procId):
 		if procId not in self.dependency:
@@ -40,6 +41,10 @@ class CpHandler:
 	def takeCheckpoint(self):
 		pass
 
+	def sendCheckpointingReqs(self):
+		for proc in self._getDependentProcs():
+			communicator.send(proc, CheckpointRequest(self.processId, self._getDependentProcs()))
+
 	def augmentOutgoingMsg(self, msg):
 		if not self.cpEnabled:
 			return msg
@@ -51,6 +56,12 @@ class CpHandler:
 
 	def _pushToBQ(self, fromProc, msg):
 		self.BQ[fromProc].put(msg)
+
+	def _getFromBQ(self, fromProc):
+		self.BQ[fromProc].get()
+
+	def _isEmptyBQ(self, fromProc):
+		return self.BQ[fromProc].Empty()
 
 	def handleIncomingMsg(self, msg):
 		if type(msg)==type(CpMessage):

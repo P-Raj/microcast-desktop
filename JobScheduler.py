@@ -13,6 +13,7 @@ import LogViewer
 class JobScheduler:
 
     def __init__(self, environment):
+
         self.MAX_BACKLOG = 5
         self.environment = environment
         self.SegmentAssignProcId = self.environment.totalProc - 1
@@ -21,15 +22,19 @@ class JobScheduler:
         self.dataHandler = Datastore.Datastore()
 
     def isSegmentAssigner(self):
+
         return self.environment.procId == self.SegmentAssignProcId
 
     def initLocalQueue(self):
+
         self.toBeAdvertised = Queue.Queue()
         self.requestQueue = Queue.Queue()
         self.downloadRequests = Queue.Queue()
 
     def handleAdvertisementQueue(self):
+
         if not self.toBeAdvertised.empty():
+
             adMessage = self.toBeAdvertised.get()
             segmentId = adMessage.messageId
             Logging.logProcessOp(processId=self.environment.procId,
@@ -38,19 +43,21 @@ class JobScheduler:
                                  message=adMessage)
 
             # broadcast
-	    # should change to bcast
+            # should change to bcast
             for _ in range(self.environment.totalProc-1):
                 if _ != self.environment.getMyId():
-	            reqMessage = adMessage.getResponse()
+                    reqMessage = adMessage.getResponse()
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
-		    Logging.logChannelOp(self.environment.procId,
+                    Logging.logChannelOp(self.environment.procId,
 					_,
 					"bcast",
 					reqMessage)
 
     def handleDownloadRequestQueue(self):
+
         if not self.downloadRequests.empty():
+
             dwnldReqMessage = self.downloadRequests.get()
             dwnldReqMessage.download()
             Logging.logProcessOp(processId=self.environment.procId,
@@ -60,7 +67,7 @@ class JobScheduler:
             self.dataHandler.addSegment(dwnldReqMessage.messageId,
                                         dwnldReqMessage.content)
             self.dataHandler.store(dwnldReqMessage)
-	    Logging.logProcessOp(processId=self.environment.procId,
+            Logging.logProcessOp(processId=self.environment.procId,
 				op="push",
 				depQueue="AdQ",
 				message=dwnldReqMessage)
@@ -169,7 +176,7 @@ class JobScheduler:
                     else:
                         raise Exception("Undefined message found in the channel")
 
-                
+
 
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
@@ -184,7 +191,7 @@ class JobScheduler:
          self.microDownload()
 
     def handleRequestResponseMessage(self, _message):
-        
+
 
         self.peers.removeBackLog(_message.sender)
 
