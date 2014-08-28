@@ -1,16 +1,15 @@
-
 import logging
 import sys
 from Message import CheckpointMessage
 import LogStore
 import LogViewer
 
-LEVELS = { 'debug':logging.DEBUG,
-            'info':logging.INFO,
-            'warning':logging.WARNING,
-            'error':logging.ERROR,
-            'critical':logging.CRITICAL,
-            }
+LEVELS = {'debug': logging.DEBUG,
+          'info': logging.INFO,
+          'warning': logging.WARNING,
+          'error': logging.ERROR,
+          'critical': logging.CRITICAL
+          }
 
 class bcolors:
     HEADER = '\033[95m'
@@ -55,7 +54,7 @@ def logProcessOp(processId, op, depQueue = None, message = None):
 		_op["queue"] = depQueue
 	if message:
 		_op["message"] = message
-	
+
 	LogStore.writeLog(_op)
 
 	if depQueue:

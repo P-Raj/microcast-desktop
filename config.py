@@ -1,10 +1,3 @@
 
-# Client configuration
-
-clientConfig = {
-}
-
-# Server configuration
-
-serverConfig = {
-}
+DEFAULT_CMD_ARGS = {}
+DEFAULT_CMD_ARGS["numSegs"] = 5
