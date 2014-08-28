@@ -12,6 +12,7 @@ import LogViewer
 import subprocess
 import os
 
+
 class JobScheduler:
 
     def __init__(self, environment):
@@ -22,18 +23,22 @@ class JobScheduler:
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
         self.peers = Peers(self.environment.totalProc)
         self.dataHandler = Datastore.Datastore(self.environment.getNumSegs())
-	self.memoryFile = "memory" + str(self.environment.getMyId()) + ".dump"
-	open(self.memoryFile,"w").close()
-	if self.isSegmentAssigner():
-		self.l = [100] * 10000
+        self.memoryFile = "memory" + str(self.environment.getMyId()) + ".dump"
+        open(self.memoryFile, "w").close()
+
+        self.isDownloading = False
+        self.downloadingSegment = None
+        self.dwnldStartTime = None
+        self.dwnldLag = 2
 
     def dumpMemory(self):
-    	out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
-    	stdout=subprocess.PIPE).communicate()[0].split(b'\n')
-    	vsz_index = out[0].split().index(b'RSS')
-    	mem = float(out[1].split()[vsz_index]) / 1024
-    	with open(self.memoryFile,"a") as fp:
-		fp.write(str(mem) + "\n")
+        out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
+                               stdout=subprocess.PIPE
+                               ).communicate()[0].split(b'\n')
+        vsz_index = out[0].split().index(b'RSS')
+        mem = float(out[1].split()[vsz_index]) / 1024
+        with open(self.memoryFile, "a") as fp:
+            fp.write(str(mem) + "\n")
 
     def isSegmentAssigner(self):
 
@@ -64,39 +69,62 @@ class JobScheduler:
                     reqMessage.receiver = _
                     self.environment.send(_, reqMessage)
                     Logging.logChannelOp(self.environment.procId,
-					_,
-					"bcast",
-					reqMessage)
+                                         _,
+                                         "bcast",
+                                         reqMessage)
+
+    def initDownloading(self):
+        self.isDownloading = True
+        self.dwnldStartTime = datetime.now()
+        self.downloadingSegment = self.downloadRequests.get()
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="pop",
+                             depQueue="DwnReqQ",
+                             message=self.downloadingSegment)
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="startDownloading",
+                             depQueue="",
+                             message=self.downloadingSegment)
+
+    def downloadingOver(self):
+        return (datetime.now() >=
+                self.dwnldStartTime + timedelta(seconds=self.dwnldLag))
+
+    def stopDownloading(self):
+        self.isDownloading = False
+        self.dwnldStartTime = None
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="stopDownloading",
+                             depQueue="",
+                             message=self.downloadingSegment)
+        self.downloadingSegment = None
+        self.dataHandler.addSegment(dwnldReqMessage.messageId,
+                                    dwnldReqMessage.content)
+        self.dataHandler.store(dwnldReqMessage)
 
     def handleDownloadRequestQueue(self):
 
-        if not self.downloadRequests.empty():
+        if not self.downloadRequests.empty() and not self.isDownloading:
+            self.initDownloading()
 
-            dwnldReqMessage = self.downloadRequests.get()
-            dwnldReqMessage.download()
+        elif self.isDownloading and self.downloadingOver():
+            self.stopDownloading()
+            #push it to the ad Queue
             Logging.logProcessOp(processId=self.environment.procId,
-                                 op="pop",
-                                 depQueue="DwnReqQ",
+                                 op="push",
+                                 depQueue="AdQ",
                                  message=dwnldReqMessage)
-            self.dataHandler.addSegment(dwnldReqMessage.messageId,
-                                        dwnldReqMessage.content)
-            self.dataHandler.store(dwnldReqMessage)
-            #print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
-
-	    Logging.logProcessOp(processId=self.environment.procId,
-				op="push",
-				depQueue="AdQ",
-				message=dwnldReqMessage)
             self.toBeAdvertised.put(dwnldReqMessage)
-	    _response = Message.RequestResponseMessage(senderId=self.environment.procId,
-					       messageId=dwnldReqMessage.messageId,
-					       receiverId=self.SegmentAssignProcId)
-	    self.environment.send(self.SegmentAssignProcId, _response)
-	    Logging.logChannelOp(self.environment.procId,
-				 self.SegmentAssignProcId,
-				 "sendConfirmation",
-				 _response)
-            # get response and send it to the inititor
+            #send response to the initiator
+            _response = Message.RequestResponseMessage(
+                senderId=self.environment.procId,
+                messageId=dwnldReqMessage.messageId,
+                receiverId=self.SegmentAssignProcId)
+            self.environment.send(self.SegmentAssignProcId, _response)
+            Logging.logChannelOp(self.environment.procId,
+                                 self.SegmentAssignProcId,
+                                 "sendConfirmation",
+                                 _response)
 
     def handleRequestQueue(self):
         if not self.requestQueue.empty():
@@ -140,19 +168,17 @@ class JobScheduler:
         self.dataHandler.addSegment(_message.messageId,
                                     _message.content)
         self.dataHandler.store(_message)
-        #print  " "*8*self.environment.procId + str(self.dataHandler) + "\r"
-
 
     def runMicroNC(self):
         self.microNC()
 
     def stopMicroNC(self):
-	
+
         if self.toBeAdvertised.empty() and self.requestQueue.empty() and \
            self.downloadRequests.empty() and \
            self.dataHandler.downlodedAll():
             return True
-	
+
         return False
 
     def microNC(self):
@@ -164,7 +190,8 @@ class JobScheduler:
 
         while not self.stopMicroNC():
 
-	    self.dumpMemory()
+            self.dumpMemory()
+
             nonDetchoice = random.randrange(4)
 
             if nonDetchoice == 0:
@@ -190,9 +217,8 @@ class JobScheduler:
                         self.handleSegmentMessage(_message)
 
                     else:
-                        raise Exception("Undefined message found in the channel")
-
-
+                        raise Exception("Undefined message \
+                                        found in the channel")
 
             elif nonDetchoice == 1:
                 self.handleRequestQueue()
@@ -204,10 +230,9 @@ class JobScheduler:
                 self.handleAdvertisementQueue()
 
     def runMicroDownload(self):
-         self.microDownload()
+        self.microDownload()
 
     def handleRequestResponseMessage(self, _message):
-
 
         self.peers.removeBackLog(_message.sender)
 
@@ -219,10 +244,9 @@ class JobScheduler:
             reqSegId = self.segmentHandler.getNextUnassigned()
 
             requestSegment = Message.DownloadRequestMessage(
-                    self.SegmentAssignProcId,
-                    reqSegId,
-                    _message.sender)
-
+                self.SegmentAssignProcId,
+                reqSegId,
+                _message.sender)
 
             requestSegment.initMessage(
                 msgProperty=None,
@@ -269,7 +293,7 @@ class JobScheduler:
         while not self.segmentHandler.allAssigned():
 
             nonDetChoice = random.randrange(2)
-	    self.dumpMemory()
+            self.dumpMemory()
 
             if nonDetChoice == 0:
 
@@ -281,7 +305,8 @@ class JobScheduler:
                         self.handleRequestResponseMessage(_message)
 
                     else:
-                        raise Exception ("microDownload received undefined message" + str(_message))
+                        raise Exception("microDownload received \
+                            undefined message" + str(_message))
 
             else:
 
