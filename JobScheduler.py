@@ -11,6 +11,7 @@ import time
 import LogViewer
 import subprocess
 import os
+from datetime import datetime,timedelta
 
 
 class JobScheduler:
@@ -29,7 +30,7 @@ class JobScheduler:
         self.isDownloading = False
         self.downloadingSegment = None
         self.dwnldStartTime = None
-        self.dwnldLag = 2
+        self.dwnldLag = 0
 
     def dumpMemory(self):
         out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
@@ -97,10 +98,12 @@ class JobScheduler:
                              op="stopDownloading",
                              depQueue="",
                              message=self.downloadingSegment)
+        self.dataHandler.addSegment(self.downloadingSegment.messageId,
+                                    self.downloadingSegment.content)
+        self.dataHandler.store(self.downloadingSegment)
+	downloadedMsg = self.downloadingSegment
         self.downloadingSegment = None
-        self.dataHandler.addSegment(dwnldReqMessage.messageId,
-                                    dwnldReqMessage.content)
-        self.dataHandler.store(dwnldReqMessage)
+	return downloadedMsg
 
     def handleDownloadRequestQueue(self):
 
@@ -108,17 +111,17 @@ class JobScheduler:
             self.initDownloading()
 
         elif self.isDownloading and self.downloadingOver():
-            self.stopDownloading()
+            downloadedMsg = self.stopDownloading()
             #push it to the ad Queue
             Logging.logProcessOp(processId=self.environment.procId,
                                  op="push",
                                  depQueue="AdQ",
-                                 message=dwnldReqMessage)
-            self.toBeAdvertised.put(dwnldReqMessage)
+                                 message=downloadedMsg)
+            self.toBeAdvertised.put(downloadedMsg)
             #send response to the initiator
             _response = Message.RequestResponseMessage(
                 senderId=self.environment.procId,
-                messageId=dwnldReqMessage.messageId,
+                messageId=downloadedMsg.messageId,
                 receiverId=self.SegmentAssignProcId)
             self.environment.send(self.SegmentAssignProcId, _response)
             Logging.logChannelOp(self.environment.procId,
