@@ -11,7 +11,7 @@ import time
 import LogViewer
 import subprocess
 import os
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 
 class JobScheduler:
@@ -101,9 +101,9 @@ class JobScheduler:
         self.dataHandler.addSegment(self.downloadingSegment.messageId,
                                     self.downloadingSegment.content)
         self.dataHandler.store(self.downloadingSegment)
-	downloadedMsg = self.downloadingSegment
+        downloadedMsg = self.downloadingSegment
         self.downloadingSegment = None
-	return downloadedMsg
+        return downloadedMsg
 
     def handleDownloadRequestQueue(self):
 
@@ -191,7 +191,7 @@ class JobScheduler:
 
         self.initLocalQueue()
 
-        while not self.stopMicroNC():
+        while True:
 
             self.dumpMemory()
 
@@ -218,6 +218,9 @@ class JobScheduler:
 
                     elif isinstance(_message, Message.SegmentMessage):
                         self.handleSegmentMessage(_message)
+
+                    elif isinstance(_message, Message.TerminateMessage):
+                        break
 
                     else:
                         raise Exception("Undefined message \
@@ -260,6 +263,9 @@ class JobScheduler:
                                   requestSegment)
 
             self.segmentHandler.assignSegment(reqSegId)
+
+        else:
+            self.segmentHandler.isDownloaded(_message.messageId)
 
     def sendDownloadRequest(self, peerId):
 
@@ -310,6 +316,17 @@ class JobScheduler:
                     else:
                         raise Exception("microDownload received \
                             undefined message" + str(_message))
+
+                    if self.segmentHandler.allDownloaded():
+
+                        for _ in range(self.environment.totalProc-1):
+                            if _ != self.environment.getMyId():
+                                terminationMsg = Message.TerminateMessage(self.environment.procId, _)
+                                self.environment.send(_, terminationMsg)
+                                Logging.logChannelOp(self.environment.procId,
+                                                     _,
+                                                     "terminateSignal",
+                                                     terminationMsg)
 
             else:
 

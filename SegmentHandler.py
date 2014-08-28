@@ -9,8 +9,9 @@ class SegmentHandler:
 
     def __init__(self, numSegs):
         self.metadata = None
-	self.numSegs = numSegs
+        self.numSegs = numSegs
         self.segmentAssignList = []
+        self.downloadedList = []
         """
             self.metadata fields
             ~~~~~~~~~~~~~~~~~~~~~~
@@ -27,22 +28,25 @@ class SegmentHandler:
 
     def downloadMetadata(self, url=None):
         # Static data as of now
-        self.metadata = {"numSegments":self.numSegs }
+        self.metadata = {"numSegments": self.numSegs}
         for i in range(self.numSegs):
             self.metadata[i] = {"segmentDownloadtime": 2,
                                 "segmentFrom": 10*i,
                                 "segmentTo": 10*(i+1)}
             self.segmentAssignList.append(False)
+            self.downloadedList.append(False)
 
     def getMetadata(self, segmentId):
         return self.metadata[segmentId]
 
-    def downloadSegment(self, segmentId):
-	return 
-        #time.sleep(self.metadata[segmentId])
-
     def allAssigned(self):
         return all(self.segmentAssignList)
+
+    def allDownloaded(self):
+        return all(self.downloadedList)
+
+    def isDownloaded(self, segmentId):
+        self.downloadedList[segmentId] = True
 
     def assignSegment(self, segmentId):
         self.segmentAssignList[segmentId] = True

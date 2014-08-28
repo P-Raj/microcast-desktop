@@ -59,7 +59,7 @@ class AdvertisementMessage(Message):
         return _adResponse
 
     def __str__(self):
-	return "AdMsg" + str((self.messageId))
+        return "AdMsg" + str((self.messageId))
 
 
 class RequestMessage(Message):
@@ -77,7 +77,7 @@ class RequestMessage(Message):
         return _response
 
     def __str__(self):
-	return "ReqMsg" + str((self.messageId))
+        return "ReqMsg" + str((self.messageId))
 
 
 class DownloadRequestMessage(Message):
@@ -96,7 +96,7 @@ class DownloadRequestMessage(Message):
         return _responseAd
 
     def __str__(self):
-	return "DwnReqMsg" + str((self.messageId))
+        return "DwnReqMsg" + str((self.messageId))
 
 
 class RequestResponseMessage(Message):
@@ -104,7 +104,7 @@ class RequestResponseMessage(Message):
     def __init__(self, senderId, messageId, receiverId):
         # messageId is the messageId of the Request message
         Message.__init__(self, senderId, messageId, receiverId)
-	self.status = True
+        self.status = True
 
     def setStatus(self, status):
         self.status = status
@@ -115,7 +115,7 @@ class RequestResponseMessage(Message):
         return True
 
     def __str__(self):
-	return "ReqResMsg" + str((self.messageId))
+        return "ReqResMsg" + str((self.messageId))
 
 
 class SegmentMessage(Message):
@@ -124,13 +124,24 @@ class SegmentMessage(Message):
         Message.__init__(self, senderId, messageId, receiverId)
 
     def __str__(self):
-	return "SegMsg" + str((self.messageId))
+        return "SegMsg" + str((self.messageId))
+
+
+class TerminateMessage(Message):
+
+    def __init__(self, senderId, receiverId):
+        Message.__init__(self, senderId, None, receiverId)
+
+    def __str__(self):
+        return "MicroCastCompleteMsg"
+
 
 class CheckpointMessage(Message):
 
-	def __init__(self, senderId, initiatorId, receiverId):
-		Message.__init__(self, senderId, initiatorId, receiverId)
-		self.initiatorId = initiatorId
+    def __init__(self, senderId, initiatorId, receiverId):
+        Message.__init__(self, senderId, initiatorId, receiverId)
+        self.initiatorId = initiatorId
+
 
 class CheckpointReqMessage(CheckpointMessage):
 
@@ -141,11 +152,12 @@ class CheckpointReqMessage(CheckpointMessage):
     def __str__(self):
         return "CkptReqMsg" + str((self.initiatorId))
 
+
 class CheckpointConfirmMessage(CheckpointMessage):
 
     def __init__(self, senderId, receiverId, reqSentTo):
         CheckpointMessage.__init__(self, senderId, None, receiverId)
         self.reqSentTo = reqSentTo
 
-	def __str__(self):
-		return "CkptCnfMsg" + str(self.sender)
+    def __str__(self):
+        return "CkptCnfMsg" + str(self.sender)

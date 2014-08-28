@@ -4,142 +4,150 @@ import Queue
 import resource
 import random
 import Logging
-from Message import CheckpointReqMessage, CheckpointConfirmMessage, CheckpointMessage
+from Message import *
+
 
 class CpHandler:
 
-	def __init__(self, procId, totalProcs):
+    def __init__(self, procId, totalProcs):
 
-		self.procId = procId
-		self.totalProcs = totalProcs
-		self.dependency = []
-		self.cpEnabled = False
-		self.cpTaken = False
-		self.cpAlert = False
-		self.cp = []
-		self.confirmReceived = {}
-		self.BQ = [Queue.Queue() for _ in range(self.totalProcs)]
+        self.procId = procId
+        self.totalProcs = totalProcs
+        self.dependency = []
+        self.cpEnabled = False
+        self.cpTaken = False
+        self.cpAlert = False
+        self.cp = []
+        self.confirmReceived = {}
+        self.BQ = [Queue.Queue() for _ in range(self.totalProcs)]
 
-	def _union(self,listA, listB):
-		return list(set(listA+listB))
+    def _union(self, listA, listB):
+        return list(set(listA+listB))
 
+    def handleRequests(self, reqMsg):
 
-	def handleRequests(self, reqMsg):
+        assert(isinstance(reqMsg, CheckpointMessage))
 
-		assert(isinstance(reqMsg, CheckpointMessage))
+        if isinstance(reqMsg, CheckpointReqMessage):
+            cpReqMsgs = self._handleCpRequest(reqMsg)
+            return cpReqMsgs
 
-		Logging.info("                                      Req:" + str(reqMsg))
+        elif isinstance(reqMsg, CheckpointConfirmMessage):
+            self._handleCpConfirmation(reqMsg)
+            return None
 
-		if isinstance(reqMsg,CheckpointReqMessage):
-			cpReqMsgs = self._handleCpRequest(reqMsg)
-			return cpReqMsgs
+        else:
+            raise Exception("Unknown checkpoint message")
 
-		elif isinstance(reqMsg, CheckpointConfirmMessage):
-			self._handleCpConfirmation(reqMsg)
-			return None
+    def checkpointInitAllowed(self):
 
-		else:
-			raise Exception("Unknown checkpoint message")
+        if self.procId == 0 and random.randrange(10) == 0 and \
+           self.cpEnabled and not self.cpAlert and len(self.dependency) > 0:
+            return True
 
-	def checkpointInitAllowed(self):
+        return False
 
-		if self.procId == 0 and random.randrange(10) == 0 and self.cpEnabled and not self.cpAlert and len(self.dependency)>0:
-			return True
+    def checkpointInit(self):
 
-		return False
+        self.cpAlert = True
+        self.cpTaken = True
 
-	def checkpointInit(self):
+        self._takeCheckpoint()
 
-		Logging.info("                                                     Cp init")
+        newCpReqs = []
 
-		self.cpAlert = True
-		self.cpTaken = True
-		
-		self._takeCheckpoint()
-		Logging.info("                                                     Completed" + str(self.dependency))
+        for nrecs in (x for x in self.dependency):
+            newCpReqs.append(
+                CheckpointReqMessage(self.procId,
+                                     self.procId,
+                                     nrecs,
+                                     self.dependency))
+            self.confirmReceived[nrecs] = False
 
-		newCpReqs = []
+        return newCpReqs
 
-		for nrecs in (x for x in self.dependency):
-			newCpReqs.append(CheckpointReqMessage(self.procId,self.procId,nrecs,self.dependency))
-			self.confirmReceived[nrecs] = False
+    def _handleCpRequest(self, cpReq):
 
-		return newCpReqs
+        self.cpAlert = True
+        self.cpTaken = True
 
+        self._takeCheckpoint()
 
-	def _handleCpRequest(self, cpReq):
+        newCpReqs = []
 
-		self.cpAlert = True
-		self.cpTaken = True
+        newDeps = (x for x in self.dependency
+                   if x not in cpReq.dependency)
 
-		self._takeCheckpoint()
+        for nrecs in newDeps:
+            newCpReqs.append(
+                CheckpointReqMessage(
+                    self.procId,
+                    cpReq.initiatorId,
+                    nrecs,
+                    self._union(self.dependency, cpReq.dependency)))
 
-		newCpReqs = []
+        newCpReqs.append(
+            CheckpointConfirmMessage(
+                self.procId,
+                cpReq.initiatorId,
+                newDeps))
 
-		newDeps = (x for x in self.dependency \
-					if x not in cpReq.dependency)
+        return newCpReqs
 
-		for nrecs in newDeps:
-			newCpReqs.append(CheckpointReqMessage(self.procId,cpReq.initiatorId,nrecs,self._union(self.dependency,cpReq.dependency)))
+    def _handleCpConfirmation(self, cpCnf):
 
-		newCpReqs.append(CheckpointConfirmMessage(self.procId,cpReq.initiatorId,newDeps))
+        assert(cpCnf.sender in self.confirmReceived)
 
-		return newCpReqs
+        self.confirmReceived[cpCnf.sender] = True
 
-	def _handleCpConfirmation(self, cpCnf):
+        for proc in cpCnf.reqSentto:
+            self.confirmReceived[cpCnf.sender] = self.confirmReceived.get(
+                cpCnf.sender,
+                False)
 
-		assert(cpCnf.sender in self.confirmReceived)
+    def completeCheckpointing(self):
 
-		self.confirmReceived[cpCnf.sender] = True
+        return self.cpTaken and all(self.confirmReceived.values())
 
-		for proc in cpCnf.reqSentto:
-			self.confirmReceived[cpCnf.sender] = self.confirmReceived.get(cpCnf.sender,
-																			False)
+    def _updateDependency(self, depProcId):
 
-	def completeCheckpointing(self):
+        if depProcId not in self.dependency:
+            self.dependency.append(depProcId)
 
-		return self.cpTaken and all(self.confirmReceived.values())
+    def _takeCheckpoint(self):
 
-	def _updateDependency(self, depProcId):
+        startTime = datetime.datetime.now()
+        session = dmtcp.checkpoint()
+        self.cp.append((session,
+                        datetime.datetime.now()-startTime,
+                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
-		if depProcId not in self.dependency:
-			self.dependency.append(depProcId)
+    def messageConsumptionAllowed(self, message):
 
-	def _takeCheckpoint(self):
+        if message.bb and not self.cpAlert:
+            self.blockMessage(message)
+            return False
 
-		startTime = datetime.datetime.now()
-		session = dmtcp.checkpoint()
-		self.cp.append((session,
-						datetime.datetime.now()-startTime,
-						resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
+        elif not message.bb and not self.cpAlert:
+            self._updateDependency(message.sender)
+            return True
 
-	def messageConsumptionAllowed(self, message):
-		
-		if message.bb and not self.cpAlert:
-			self.blockMessage(message)
-			return False
+        elif self.cpAlert and not self.cpTaken:
+            self.blockMessage(message)
+            return False
 
-		elif not message.bb and not self.cpAlert:
-			self._updateDependency(message.sender)
-			return True
+        elif self.cpTaken:
+            assert(all(x.empty() for x in self.BQ))
+            return True
 
-		elif self.cpAlert and not self.cpTaken:
-			self.blockMessage(message)
-			return False
+    def blockMessage(self, blockMsg):
 
-		elif self.cpTaken:
-			assert(all (x.empty() for x in self.BQ))
-			return True
+        self.BQ[blockMsg.sender].put(blockMsg)
 
-	def blockMessage(self, blockMsg):
+    def getBlockedMessages(self):
 
-		self.BQ[blockMsg.sender].put(blockMsg)
-
-	def getBlockedMessages(self):
-
-		blockedMessages = []
-		for queue in self.BQ:
-			while not queue.empty:
-				blockedMessages.append(queue.get())
-		return blockedMessages
-
+        blockedMessages = []
+        for queue in self.BQ:
+            while not queue.empty:
+                blockedMessages.append(queue.get())
+        return blockedMessages

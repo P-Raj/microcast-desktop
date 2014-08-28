@@ -13,7 +13,8 @@ def readCmdArgs():
     onlyCp = DEFAULT_CMD_ARGS["onlyCp"]
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hs:l:", ["num_seg", "log_level", "only_cp"])
+        opts, args = getopt.getopt(sys.argv[1:], "hs:l:",
+                                   ["num_seg", "log_level", "only_cp"])
     except geopt.GetoptError:
         print sys.argv[0] + ' -s <number of segments>'
         sys.exit(2)
@@ -53,7 +54,9 @@ def readCmdArgs():
     return numSeg, logLevel, onlyCp
 
 numSegs, logLevel, onlyCp = readCmdArgs()
-Logging.setLevel(logLevel)
+
+Logging.level = logLevel
+Logging.onlyCp = onlyCp
 
 # set up the distributed environment
 environment = Communicator(numSegs)
