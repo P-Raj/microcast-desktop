@@ -52,7 +52,7 @@ def printTerminal(data):
     elif data["type"] == "channel":
         printData = getChanLog(data)
 
-    sys.stdout.write("%s %s" % (printData[0]*20*" ", printData[1]))
+    sys.stdout.write("%s %s \n" % (printData[0]*20*" ", printData[1]))
     sys.stdout.flush()
 
 

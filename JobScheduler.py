@@ -311,6 +311,10 @@ class JobScheduler:
                 if _message:
 
                     if isinstance(_message, Message.RequestResponseMessage):
+                        Logging.logChannelOp(_message.sender,
+                                             _message.receiver,
+                                             "recieve",
+                                             _message)
                         self.handleRequestResponseMessage(_message)
 
                     else:
@@ -318,6 +322,7 @@ class JobScheduler:
                             undefined message" + str(_message))
 
                     if self.segmentHandler.allDownloaded():
+
 
                         for _ in range(self.environment.totalProc-1):
                             if _ != self.environment.getMyId():

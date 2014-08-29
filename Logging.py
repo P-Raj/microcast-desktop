@@ -37,6 +37,8 @@ def logChannelOp(chanFrom, chanTo, op, message):
     _op["op"] = op
     _op["message"] = message
 
+    LogStore.writeLog(_op)
+
     if onlyCp:
         if type(message) == type(CheckpointMessage):
             info(_message)
