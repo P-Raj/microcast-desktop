@@ -191,17 +191,9 @@ class JobScheduler:
 
         self.initLocalQueue()
 
-        while True:
+        while self.stopMicroNC():
 
             self.dumpMemory()
-
-            if float(str(self.dataHandler)) == 100:
-                completionMsg = Message.DownloadCompleteMessage(
-                    senderId=self.environment.procId,
-                    receiverId=self.SegmentAssignProcId)
-                self.environment.send(self.SegmentAssignProcId,
-                    completionMsg)
-
 
             nonDetchoice = random.randrange(4)
 
@@ -216,7 +208,6 @@ class JobScheduler:
                                          _message)
 
                     if isinstance(_message, Message.DownloadRequestMessage):
-                        assert(_message.sender == self.SegmentAssignProcId)
                         self.handleDownloadRequestMessage(_message)
 
                     elif isinstance(_message, Message.AdvertisementMessage):
@@ -229,6 +220,7 @@ class JobScheduler:
                         self.handleSegmentMessage(_message)
 
                     elif isinstance(_message, Message.TerminateMessage):
+			print "-----------------------Terminating------------------------"
                         break
 
                     else:
@@ -305,8 +297,6 @@ class JobScheduler:
         Logging.logProcessOp(processId=self.environment.procId,
                              op="startMicroDownload")
 
-        assert(self.environment.procId == self.SegmentAssignProcId)
-
         self.segmentHandler.downloadMetadata()
         self.peers.initPeers(self.environment.totalProc - 1)
 
@@ -321,15 +311,12 @@ class JobScheduler:
 
                 if _message:
 
-                    raise Exception("This is shit")
-
                     if isinstance(_message, Message.RequestResponseMessage):
                         Logging.logChannelOp(_message.sender,
                                              _message.receiver,
                                              "recieve",
                                              _message)
                         self.handleRequestResponseMessage(_message)
-
 
                     else:
                         raise Exception("microDownload received \

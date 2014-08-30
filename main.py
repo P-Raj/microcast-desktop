@@ -64,7 +64,6 @@ environment = Communicator(numSegs)
 processId = environment.getMyId()
 initiator = environment.totalProc - 1
 
-environment.setUpBarrier()
 
 procJobScheduler = JobScheduler(environment)
 if processId == initiator:

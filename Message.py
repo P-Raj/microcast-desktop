@@ -126,6 +126,13 @@ class SegmentMessage(Message):
     def __str__(self):
         return "SegMsg" + str((self.messageId))
 
+class DownloadCompleteMessage(Message):
+
+    def __init__(self, senderId, receiverId):
+        Message.__init__(self, senderId, None, receiverId)
+
+    def __str__(self):
+        return "DwnldCmpMsg" + str(senderId) 
 
 class TerminateMessage(Message):
 
