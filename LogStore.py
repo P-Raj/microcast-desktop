@@ -1,7 +1,28 @@
 import LogViewer
+import os
 
-log_file_name = "store.log"
+terminalOpEnabled = True
+fileOpEnabled = True
+fileOpFolder = "output/"
 
 
-def writeLog(data):
-    LogViewer.printTerminal(data)
+
+def initRunHistory(procId):
+	global historyFile
+	historyFile = File(procId,"history")
+
+def initDataHistory(procId):
+	global dataFile
+
+
+class File:
+
+	def __init__(self, fileName):
+		self.ext = ".log"
+		if not os.path.exists(fileOpFolder):
+   			os.makedirs(fileOpFolder)
+		self.file = open(fileOpFolder + fileName + self.ext ,'w')
+
+	def write(self,buffer):
+		self.file.write(buffer)
+
