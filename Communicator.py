@@ -1,29 +1,86 @@
-from mpi4py import MPI
 from random import randrange, choice
 import Queue
 from CheckpointController import CpHandler
-import resource
 from Message import CheckpointMessage
-
+import threading
 
 class Communicator:
 
-    def __init__(self, numSegs):
 
-        self.setupCommunicator()
-        self.totalSegs = numSegs
+    def __init__(self, cmdArgs):
+
+        self.inChannel = {}
+        self.outChannel = {}
+
+        self.totalSegs = cmdArgs["numSegs"]
+        self.totalProcs = cmdArgs["numProcs"]
+        self.peers = cmdArgs["peers"]
+        self.me = socket.gethostname()
+
+        self.connections = dict((_id,host) for _id,host in enumerate(self.peers))
+
+        self.procId = None
+        # remove self from the coneections
+        # and updating procId
+        for procId in self.connections:
+            if self.connections[procId] == self.me:
+                self.connections.remove(procId)
+                break
+
+        assert(len(self.connections.keys()) == len(self.peers)-1)
+
+        self.sendPort = 8080
+        self.recvPort = 8081
+
         self.ckptCntrl = CpHandler(self.procId, self.totalProc)
 
-        # assert variables
-        self.assertSendId = 0
-        self.assertReceiveId = [-1] * self.totalProc
+        tOut = threading.Thread(target=self._setupOutChannels)
+        tIn = threading.Thread(target=self._setupInChannels)
 
-    def setupCommunicator(self):
+        tOut.start()
+        tIn.start()
 
-        self.commWorld = MPI.COMM_WORLD
-        self.totalProc = self.commWorld.Get_size()
-        self.procId = self.commWorld.Get_rank()
-        self.loopChannel = Queue.Queue()
+        tOut.join()
+        tIn.join()
+
+
+    def _setupOutChannels(self):
+
+        for _id in self.connections:
+
+            peer = self.connections[_id]
+
+            soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+            # Ipv4 with TCP connection
+            soc.bind(('', self.sendPort))
+            soc.settimeout(5.0)
+
+            try:
+                soc.connect((peer, self.recvPort))
+
+            except socket.timeout:
+
+                print "Timeout issue"
+                raise SystemExit(0)
+
+            self.outChannel[_id] = soc
+
+
+    def _setupInChannels(self):
+
+        self.recvSoc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+        # Ipv4 with TCP connection
+
+        self.recvSoc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+
+        self.recvSoc.bind(( '', self.recvPort ))
+        self.recvSoc.listen(self.numPeers)
+
+        for _ in self.peers:
+            (client,addr) = self.recvSoc.accept()
+            print "Received connection from " , addr
+            self.inChannel[self.peers.index(addr)] = client
+
 
     def getMyId(self):
 
@@ -33,51 +90,16 @@ class Communicator:
 
         return self.totalSegs
 
-    def setUpBarrier(self):
+    def _send(self, message, dest):
+        message = pickle.dump(message)
+        self.outChannel[dest].send(message)
 
-        self.commWorld.Barrier()
+    def _receive(self, fromChannel):
+        message = fromChannel.recv()
+        message = pickle.loads(message)
 
-    def trySendingCp(self):
-
-        if self.ckptCntrl.checkpointInitAllowed():
-            for msg in self.ckptCntrl.checkpointInit():
-
-                #asserts that message sent is in order i.e. m0 < m1 < m2
-                assert(self.assertSendId == msg.num)
-                self.assertSendId += 1
-
-                if self.getMyId() == msg.receiver:
-                    self.loopChannel.put(msg)
-                else:
-                    self.commWorld.isend(msg, dest=msg.receiver)
-
-    def send(self, toProc, message):
-
-        self.trySendingCp()
-
-        #asserts that message sent is in order i.e. m0 < m1 < m2
-        assert(self.assertSendId == message.num)
-        self.assertSendId += 1
-
-        message.setBB(self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken)
-
-        if self.getMyId() == toProc:
-            self.loopChannel.put(message)
-        else:
-            self.commWorld.isend(message, dest=toProc)
-
-    def _receive(self, fromProc):
-
-        recvdMsg = self.loopChannel.get() if fromProc == self.getMyId() \
-            else self.commWorld.recv(source=fromProc)
-
-        #assert that the message received has a higher id
-        #than the previously received message
-        assert(self.assertReceiveId[recvdMsg.sender] < recvdMsg.num)
-        self.assertReceiveId[recvdMsg.sender] = recvdMsg.num
-
-        if isinstance(recvdMsg, CheckpointMessage):
-            self.ckptCntrl.handleRequests(recvdMsg)
+        if isinstance(message,CheckpointMessage):
+            self.ckptCntrl.handleRequests(message)
             return None
 
         if self.ckptCntrl.messageConsumptionAllowed(recvdMsg):
@@ -86,46 +108,32 @@ class Communicator:
 
         return None
 
+
+    def trySendingCp(self):
+        if self.ckptCntrl.checkpointInitAllowed():
+            for msg in self.ckptCntrl.checkpointInit():
+                self._send(msg, dest=msg.receiver)
+
+    def send(self, toProc, message):
+        self.trySendingCp()
+        message.setBB(self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken)
+        self._send(message,dest=toProc)
+
+
     def sendToRandom(self, message):
 
         self.send(randrange(self.totalProc), message)
 
-    def sendBroadcast(self, message):
-
-        self.commWorld.bcast(message, root=self.procId)
-
-    def receiveBroadcast(self, fromProc):
-
-        return self.commWorld.bcast(None, root=fromProc)
-
     def getNonEmptyChannels(self):
 
-        _channels = [procId for procId in range(self.totalProc)
-                     if procId != self.getMyId() and
-                     self.commWorld.Iprobe(source=procId)]
-
-        if not self.loopChannel.empty():
-            _channels.append(self.getMyId())
-
-        return _channels
-
-    def blockingReceive(self):
-        #blocking wait function
-        #returns None if there is no message waiting
-
-        nonEmptyChannels = self.getNonEmptyChannels()
-
-        while not nonEmptyChannels:
-            nonEmptyChannels = self.getNonEmptyChannels()
-
-        return self._receive(choice(nonEmptyChannels))
+        readable, writable, error = select.select([x[0] for x in inChannel.values()],[],[])
+        return readable
 
     def nonBlockingReceive(self):
 
         self.trySendingCp()
 
         nonEmptyChannels = self.getNonEmptyChannels()
-
         if nonEmptyChannels:
             return self._receive(choice(nonEmptyChannels))
         return None
