@@ -60,7 +60,7 @@ def readCmdArgs():
             print "unknown symbol -" + opt
             print "Skipping -" + opt + " " + arg
 
-    cmdArgs["totalProcs"] = len(cmdArgs["peers"])
+    cmdArgs["numProcs"] = len(cmdArgs["peers"])
     return cmdArgs
 
 
@@ -73,7 +73,7 @@ Logging.onlyCp = cmdArgs["onlyCp"]
 environment = Communicator(cmdArgs)
 
 processId = environment.getMyId()
-initiator = environment.totalProc - 1
+initiator = environment.totalProcs - 1
 
 
 procJobScheduler = JobScheduler(environment)

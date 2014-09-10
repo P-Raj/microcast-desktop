@@ -3,6 +3,9 @@ import Queue
 from CheckpointController import CpHandler
 from Message import CheckpointMessage
 import threading
+import socket
+import commands
+import select
 
 class Communicator:
 
@@ -15,24 +18,29 @@ class Communicator:
         self.totalSegs = cmdArgs["numSegs"]
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
-        self.me = socket.gethostname()
+        self.me =  commands.getoutput("hostname -I").strip()
+
 
         self.connections = dict((_id,host) for _id,host in enumerate(self.peers))
 
         self.procId = None
         # remove self from the coneections
         # and updating procId
+	print self.me
+
         for procId in self.connections:
-            if self.connections[procId] == self.me:
-                self.connections.remove(procId)
+            if self.connections[procId][0].strip() == self.me:
+		self.procId = procId
+                del self.connections[procId]
                 break
 
         assert(len(self.connections.keys()) == len(self.peers)-1)
+	self.numPeers = len(self.connections.keys())
 
         self.sendPort = 8080
         self.recvPort = 8081
 
-        self.ckptCntrl = CpHandler(self.procId, self.totalProc)
+        self.ckptCntrl = CpHandler(self.procId, self.totalProcs)
 
         tOut = threading.Thread(target=self._setupOutChannels)
         tIn = threading.Thread(target=self._setupInChannels)
@@ -122,11 +130,11 @@ class Communicator:
 
     def sendToRandom(self, message):
 
-        self.send(randrange(self.totalProc), message)
+        self.send(randrange(self.totalProcs), message)
 
     def getNonEmptyChannels(self):
 
-        readable, writable, error = select.select([x[0] for x in inChannel.values()],[],[])
+        readable, writable, error = select.select([x[0] for x in self.inChannel.values()],[],[])
         return readable
 
     def nonBlockingReceive(self):

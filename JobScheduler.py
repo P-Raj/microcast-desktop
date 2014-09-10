@@ -20,9 +20,9 @@ class JobScheduler:
 
         self.MAX_BACKLOG = 5
         self.environment = environment
-        self.SegmentAssignProcId = self.environment.totalProc - 1
+        self.SegmentAssignProcId = self.environment.totalProcs - 1
         self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
-        self.peers = Peers(self.environment.totalProc)
+        self.peers = Peers(self.environment.totalProcs)
         self.dataHandler = Datastore.Datastore(self.environment.getNumSegs())
         self.memoryFile = "memory" + str(self.environment.getMyId()) + ".dump"
         open(self.memoryFile, "w").close()
@@ -64,7 +64,7 @@ class JobScheduler:
 
             # broadcast
             # should change to bcast
-            for _ in range(self.environment.totalProc-1):
+            for _ in range(self.environment.totalProcs-1):
                 if _ != self.environment.getMyId():
                     reqMessage = adMessage.getResponse()
                     reqMessage.receiver = _
@@ -308,7 +308,7 @@ class JobScheduler:
         assert(self.environment.procId == self.SegmentAssignProcId)
 
         self.segmentHandler.downloadMetadata()
-        self.peers.initPeers(self.environment.totalProc - 1)
+        self.peers.initPeers(self.environment.totalProcs - 1)
 
         while not self.segmentHandler.allAssigned():
 
@@ -338,7 +338,7 @@ class JobScheduler:
                     if self.segmentHandler.allDownloaded():
 
 
-                        for _ in range(self.environment.totalProc-1):
+                        for _ in range(self.environment.totalProcs-1):
                             if _ != self.environment.getMyId():
                                 terminationMsg = Message.TerminateMessage(self.environment.procId, _)
                                 self.environment.send(_, terminationMsg)

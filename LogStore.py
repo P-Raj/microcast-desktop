@@ -14,6 +14,9 @@ def initRunHistory(procId):
 def initDataHistory(procId):
 	global dataFile
 
+def writeLog(string):
+	print string
+
 
 class File:
 
