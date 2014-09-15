@@ -3,7 +3,8 @@
 
 import time
 import random
-
+import urllib
+import json
 
 class SegmentHandler:
 

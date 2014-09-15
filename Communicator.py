@@ -55,30 +55,42 @@ class Communicator:
         tOut.start()
         tOut.join()
         tIn.join()
+	exit()
 
 
     def _setupOutChannels(self):
 
-        for _id in self.connections:
+	keys = self.connections.keys()
+	peerCounter = 0
+	while peerCounter < len(keys):
+	    _id = keys[peerCounter]	
+            #for _id in self.connections:
             peer = self.connections[_id]
             peerIp = peer[0]
             peerSendPort = peer[1]
             peerRecvPort = peer[2]
             
             
-            soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+	    soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
             soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 
             # Ipv4 with TCP connection
             soc.settimeout(5.0)
 
             try:
+		print "Connecting to", peerIp, peerRecvPort
                 soc.connect((peerIp, peerRecvPort))
 
             except socket.timeout:
 
                 print "Timeout issue"
                 raise SystemExit(0)
+	    
+	    except:
+		peerCounter-=1
+	
+	    peerCounter+=1 
+		
 
 
     def _setupInChannels(self):
@@ -90,8 +102,8 @@ class Communicator:
 
         self.recvSoc.bind(( '', self.meComplete[2] ))
         self.recvSoc.listen(self.numPeers)
-
-        print "Listening at ", socket.gethostname(), " : ", self.meComplete[2]
+	
+        print "Listening at ", socket.gethostname(), " : ", self.meComplete
 
         for _ in self.peers:
             (client,addr) = self.recvSoc.accept()
