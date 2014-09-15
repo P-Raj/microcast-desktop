@@ -23,31 +23,37 @@ class Communicator:
 
         self.connections = dict((_id,host) for _id,host in enumerate(self.peers))
 
+
         self.procId = None
         # remove self from the coneections
         # and updating procId
-	print self.me
 
         for procId in self.connections:
             if self.connections[procId][0].strip() == self.me:
-		self.procId = procId
+                self.procId = procId
+                self.meComplete = self.connections[procId]
                 del self.connections[procId]
                 break
 
-        assert(len(self.connections.keys()) == len(self.peers)-1)
-	self.numPeers = len(self.connections.keys())
+        print "me : " , self.meComplete
+        for p in self.connections.items():
+            print p
 
-        self.sendPort = 8080
-        self.recvPort = 8081
+        for i in range(10):
+            print
+
+        assert(len(self.connections.keys()) == len(self.peers)-1)
+        self.numPeers = len(self.connections.keys())
+
 
         self.ckptCntrl = CpHandler(self.procId, self.totalProcs)
 
         tOut = threading.Thread(target=self._setupOutChannels)
         tIn = threading.Thread(target=self._setupInChannels)
 
-        tOut.start()
+        #tOut.start()
         tIn.start()
-
+        tOut.start()
         tOut.join()
         tIn.join()
 
@@ -55,23 +61,25 @@ class Communicator:
     def _setupOutChannels(self):
 
         for _id in self.connections:
-
             peer = self.connections[_id]
-
+            peerIp = peer[0]
+            peerSendPort = peer[1]
+            peerRecvPort = peer[2]
+            
+            
             soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+            soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+
             # Ipv4 with TCP connection
-            soc.bind(('', self.sendPort))
             soc.settimeout(5.0)
 
             try:
-                soc.connect((peer, self.recvPort))
+                soc.connect((peerIp, peerRecvPort))
 
             except socket.timeout:
 
                 print "Timeout issue"
                 raise SystemExit(0)
-
-            self.outChannel[_id] = soc
 
 
     def _setupInChannels(self):
@@ -81,8 +89,10 @@ class Communicator:
 
         self.recvSoc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 
-        self.recvSoc.bind(( '', self.recvPort ))
+        self.recvSoc.bind(( '', self.meComplete[2] ))
         self.recvSoc.listen(self.numPeers)
+
+        print "Listening at ", socket.gethostname(), " : ", self.meComplete[2]
 
         for _ in self.peers:
             (client,addr) = self.recvSoc.accept()

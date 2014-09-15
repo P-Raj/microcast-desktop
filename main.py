@@ -37,7 +37,10 @@ def readCmdArgs():
             cmdArgs["numSegs"] = int(arg)
 
         elif opt == '-p':
-            cmdArgs["peers"].append(arg.split(":"))
+            peerInfo = arg.split(":")
+            peerInfo[-1] = int(peerInfo[-1]) #port number to int
+            peerInfo.append(peerInfo[-1]+1)
+            cmdArgs["peers"].append(peerInfo)
             #(ip,port)
 
         elif opt in ('-l', "--log_level"):
