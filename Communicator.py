@@ -81,6 +81,8 @@ class Communicator:
 
             try:
                 soc.connect((peerIp, peerRecvPort))
+		print "[OUT] connected to", (peerIp,peerRecvPort)
+	        peerCounter+=1 
 
             except socket.timeout:
 
@@ -88,11 +90,9 @@ class Communicator:
                 raise SystemExit(0)
 	    
 	    except:
-		peerCounter-=1
-	
-	    peerCounter+=1 
+		pass	
 		
-
+	print "[OUT] connections established"
 
     def _setupInChannels(self):
 
@@ -106,11 +106,12 @@ class Communicator:
 	
         print "Listening at ", socket.gethostname(), " : ", self.meComplete
 
-        for _ in self.peers:
+        for _ in range(len(self.peers)-1):
             (client,addr) = self.recvSoc.accept()
             print "Received connection from " , addr
             self.inChannel[self.incomingPeers.index(addr)] = client
 
+	print "All incoming channels established"
 
     def getMyId(self):
 
