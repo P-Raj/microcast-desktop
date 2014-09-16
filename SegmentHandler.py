@@ -26,15 +26,20 @@ class SegmentHandler:
             }
         """
 
-    def downloadMetadata(self, url=None):
+    def downloadMetadata(self, url , videoName ):
         # Static data as of now
-        self.metadata = {"numSegments": self.numSegs}
+        url = url + urllib.urlencode({'init':'True','file': 'music.mp4'})
+        meta = json.loads(urllib.urlopen(url).read())
+
+        
+        self.metadata = {"numSegments": len(meta["Segments"])}
+        self.metadata["size"] = meta["size"]
+
         for i in range(self.numSegs):
-            self.metadata[i] = {"segmentDownloadtime": 2,
-                                "segmentFrom": 10*i,
-                                "segmentTo": 10*(i+1)}
-            self.segmentAssignList.append(False)
-            self.downloadedList.append(False)
+            for i in meta["Segments"]:
+                self.metadata[i] = {"segmentFrom": meta["Segments"]}
+                self.segmentAssignList.append(False)
+                self.downloadedList.append(False)
 
     def getMetadata(self, segmentId):
         return self.metadata[segmentId]

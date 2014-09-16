@@ -1,4 +1,3 @@
-from mpi4py import MPI
 from Peers import Peers
 from SegmentHandler import SegmentHandler
 from Communicator import Communicator
@@ -31,6 +30,10 @@ class JobScheduler:
         self.downloadingSegment = None
         self.dwnldStartTime = None
         self.dwnldLag = 0
+
+        self.video_url = "http://127.1.1:8888/"
+        self.video_name = "music.mp4"
+
 
     def dumpMemory(self):
         out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
@@ -74,61 +77,74 @@ class JobScheduler:
                                          "bcast",
                                          reqMessage)
 
-    def initDownloading(self):
+    def download(self, segment):
         self.isDownloading = True
         self.dwnldStartTime = datetime.now()
-        self.downloadingSegment = self.downloadRequests.get()
-        Logging.logProcessOp(processId=self.environment.procId,
-                             op="pop",
-                             depQueue="DwnReqQ",
-                             message=self.downloadingSegment)
+        threading.Thread(target=download, args=[segment])
+        
         Logging.logProcessOp(processId=self.environment.procId,
                              op="startDownloading",
                              depQueue="",
-                             message=self.downloadingSegment)
+                             message=segment)
 
-    def downloadingOver(self):
-        return (datetime.now() >=
-                self.dwnldStartTime + timedelta(seconds=self.dwnldLag))
 
-    def stopDownloading(self):
+        dataSeg = urllib.urlopen(self.video_url+"/request=True&file=music.mp4&start=0").read()
+        #datsSeg in memory
+
+
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="downloadComplete",
+                             depQueue="",
+                             message=segment)
+
+        self.dataHandler.addSegment(segment.messageId,
+                                    dataSeg)
+
+        #self.dataHandler.store(self.downloadingSegment)
+        
         self.isDownloading = False
         self.dwnldStartTime = None
+        
+        #push it to the ad Queue
         Logging.logProcessOp(processId=self.environment.procId,
-                             op="stopDownloading",
-                             depQueue="",
-                             message=self.downloadingSegment)
-        self.dataHandler.addSegment(self.downloadingSegment.messageId,
-                                    self.downloadingSegment.content)
-        self.dataHandler.store(self.downloadingSegment)
-        downloadedMsg = self.downloadingSegment
-        self.downloadingSegment = None
-        return downloadedMsg
+                             op="push",
+                             depQueue="AdQ",
+                             message=segment)
 
+        self.toBeAdvertised.put(segment)
+        #send response to the initiator
+
+        _response = Message.RequestResponseMessage(
+            senderId=self.environment.procId,
+            messageId=segment.messageId,
+            receiverId=self.SegmentAssignProcId)
+
+        self.environment.send(self.SegmentAssignProcId, _response)
+
+        Logging.logChannelOp(self.environment.procId,
+                             self.SegmentAssignProcId,
+                             "sendConfirmation",
+                             _response)
+
+
+    def downloadingOver(self):
+        return not self.isDownloading
+
+        
     def handleDownloadRequestQueue(self):
 
-        if not self.downloadRequests.empty() and not self.isDownloading:
-            self.initDownloading()
+        segment = self.downloadRequests.get()
 
-        elif self.isDownloading and self.downloadingOver():
-            downloadedMsg = self.stopDownloading()
-            #push it to the ad Queue
-            Logging.logProcessOp(processId=self.environment.procId,
-                                 op="push",
-                                 depQueue="AdQ",
-                                 message=downloadedMsg)
-            self.toBeAdvertised.put(downloadedMsg)
-            #send response to the initiator
-            _response = Message.RequestResponseMessage(
-                senderId=self.environment.procId,
-                messageId=downloadedMsg.messageId,
-                receiverId=self.SegmentAssignProcId)
-            self.environment.send(self.SegmentAssignProcId, _response)
-            Logging.logChannelOp(self.environment.procId,
-                                 self.SegmentAssignProcId,
-                                 "sendConfirmation",
-                                 _response)
+        Logging.logProcessOp(processId=self.environment.procId,
+                             op="pop",
+                             depQueue="DwnReqQ",
+                             message=segment)
 
+        downloadThread = threading.Thread(target=download, args =[segment])
+        downloadThread.start()
+
+
+        
     def handleRequestQueue(self):
         if not self.requestQueue.empty():
             reqMessage = self.requestQueue.get()
@@ -307,7 +323,7 @@ class JobScheduler:
 
         assert(self.environment.procId == self.SegmentAssignProcId)
 
-        self.segmentHandler.downloadMetadata()
+        self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
         self.peers.initPeers(self.environment.totalProcs - 1)
 
         while not self.segmentHandler.allAssigned():
@@ -321,8 +337,7 @@ class JobScheduler:
 
                 if _message:
 
-                    raise Exception("This is shit")
-
+                    
                     if isinstance(_message, Message.RequestResponseMessage):
                         Logging.logChannelOp(_message.sender,
                                              _message.receiver,

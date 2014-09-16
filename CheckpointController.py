@@ -66,6 +66,25 @@ class CpHandler:
 
         return newCpReqs
 
+    def storeCp(self):
+
+        for ickpt,ckp in enumerate(self.cp):
+            with open(str(ickpt)+".checkpoint","wb") as fp:
+                fp.write(ckpt)
+
+    def getCp(self):
+
+        maxCps = 100
+        cps = []
+        for ickpt in range(maxCps):
+            with open(str(ickpt)+".checkpoint","rb") as fp:
+                cps.append(fp.read())
+        return cps
+
+    def restore(self, cp=None):
+        lastCp = self.getCp()[-1]
+        dmtcp.restore(lastCp)
+
     def _handleCpRequest(self, cpReq):
 
         self.cpAlert = True

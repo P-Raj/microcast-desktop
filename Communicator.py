@@ -36,12 +36,11 @@ class Communicator:
                 break
 
         print "me : " , self.meComplete
+        print "connected items :"
         for p in self.connections.items():
             print p
 
-        for i in range(10):
-            print
-
+        
         assert(len(self.connections.keys()) == len(self.peers)-1)
         self.numPeers = len(self.connections.keys())
 
