@@ -2,10 +2,10 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import os
-import simplejson
+import json
 import math
 
-MaxSegmentSize = 10
+MaxSegmentSize = 10000
 
 
 class FileHandler(BaseHTTPRequestHandler):
@@ -25,7 +25,12 @@ class FileHandler(BaseHTTPRequestHandler):
 
     def getSegmentMeta(self, filename):
         size = self.getFileSize(filename)
-        for segId in range(math.floor(size/MaxSegmentSize))
+        meta = {}
+        meta["size"] = size
+        meta["Segments"] = {}
+        for segId in range(size/MaxSegmentSize):
+            meta["Segments"][segId] = MaxSegmentSize*segId
+        return meta
 
     def parsePath(self):
         args = dict(
@@ -35,21 +40,21 @@ class FileHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
 
-        self.args = parsePath()
+        self.args = self.parsePath()
         if "request" in self.args:
             content = self.getContent(self.args["file"],
-                                      self.args["start"], self.args["end"])
+                                      int(self.args["start"]))
             self.send_response(200)
             self.send_header('Content-type', 'application/octet-stream')
             self.end_headers()
             self.wfile.write(content)
 
         elif "init" in self.args:
-            meta = self.getSegmentMeta(filename)
+            meta = self.getSegmentMeta(self.args["file"])
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(simplejson.dump(meta))
+            self.wfile.write(json.dumps(meta))
 
         else:
             raise Exception("Unknown request")
