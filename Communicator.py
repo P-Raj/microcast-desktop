@@ -18,6 +18,7 @@ class Communicator:
         self.totalSegs = cmdArgs["numSegs"]
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
+	self.incomingPeers = [(x[0],int(x[1])) for x in self.peers]
         self.me =  commands.getoutput("hostname -I").strip()
 
 
@@ -73,12 +74,12 @@ class Communicator:
             
 	    soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
             soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+	    soc.bind(('',self.meComplete[1]))
 
             # Ipv4 with TCP connection
             soc.settimeout(5.0)
 
             try:
-		print "Connecting to", peerIp, peerRecvPort
                 soc.connect((peerIp, peerRecvPort))
 
             except socket.timeout:
@@ -108,7 +109,7 @@ class Communicator:
         for _ in self.peers:
             (client,addr) = self.recvSoc.accept()
             print "Received connection from " , addr
-            self.inChannel[self.peers.index(addr)] = client
+            self.inChannel[self.incomingPeers.index(addr)] = client
 
 
     def getMyId(self):
