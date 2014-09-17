@@ -16,8 +16,8 @@ def readCmdArgs():
     cmdArgs["totalProcs"] = 1
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hs:l:p:",
-                                   ["num_seg", "log_level", "only_cp"])
+        opts, args = getopt.getopt(sys.argv[1:], "l:p:",
+                                   [ "log_level", "only_cp"])
     except geopt.GetoptError:
         print sys.argv[0] + ' -s <number of segments>'
         sys.exit(2)

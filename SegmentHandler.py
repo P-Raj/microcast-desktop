@@ -30,6 +30,7 @@ class SegmentHandler:
         # Static data as of now
         url = url + urllib.urlencode({'init':'True','file': 'music.mp4'})
 	url = "http://192.168.21.20:8888/init=True&file=" + videoName
+	print "Downloading metadata from : ", url
         meta = json.loads(urllib.urlopen(url).read())
 
         

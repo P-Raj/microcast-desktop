@@ -121,9 +121,38 @@ class Communicator:
         message = pickle.dumps(message)
         self.outChannel[dest].send(message)
 
+
+    def readDataFromSocket(self, socket):
+
+        data = ''
+        buffer = ''
+        
+        try:
+
+            while True:
+                data = socket.recv(4096)
+
+                if not data: 
+                    break
+
+                buffer += data
+
+        except error, (errorCode,message): 
+            # error 10035 is no data available, it is non-fatal
+            if errorCode != 10035:
+                print 'socket.error - ('+str(errorCode)+') ' + message
+
+
+        if data:
+            print 'received '+ buffer
+            return buffer
+        else:
+            raise Exception('disconnected')
+
     def _receive(self, fromChannel):
-        message = fromChannel.recv(2000000)
-	print "message :" , str(message)
+        message = self.readDataFromSocket(fromChannel)
+        #fromChannel.recv(2000000)
+        print "message :" , str(message)
         message = pickle.loads(message)
 
         if isinstance(message,CheckpointMessage):
