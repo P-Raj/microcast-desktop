@@ -75,7 +75,6 @@ class Communicator:
 	    soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
             soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 	    soc.bind(('',self.meComplete[1]))
-	    soc.setblocking(1)
 
             # Ipv4 with TCP connection
             soc.settimeout(5.0)
@@ -108,7 +107,6 @@ class Communicator:
         self.recvSoc.bind(( '', self.meComplete[2] ))
         self.recvSoc.listen(self.numPeers)
 
-	self.recvSoc.setblocking(1)	
         print "Listening at ", socket.gethostname(), " : ", self.meComplete
 
         for _ in range(len(self.peers)-1):
@@ -125,35 +123,8 @@ class Communicator:
 
     def _send(self, message, dest):
         message = pickle.dumps(message)
-        self.outChannel[dest].send(message)
+        self.outChannel[dest].sendall(message)
 
-
-    def readDataFromSocket(self, socket):
-
-        data = ''
-        buffer = ''
-        
-        try:
-
-            while True:
-                data = socket.recv(4096)
-
-                if not data: 
-                    break
-
-                buffer += data
-
-        except error, (errorCode,message): 
-            # error 10035 is no data available, it is non-fatal
-            if errorCode != 10035:
-                print 'socket.error - ('+str(errorCode)+') ' + message
-
-
-        if data:
-            print 'received '+ buffer
-            return buffer
-        else:
-            return None
 
     def _receive(self, fromChannel):
         message = self.readDataFromSocket(fromChannel)
@@ -202,3 +173,15 @@ class Communicator:
         if nonEmptyChannels:
             return self._receive(choice(nonEmptyChannels))
         return None
+
+    def readlines(self, sock, recv_buffer=4096, delim='\n'):
+	buffer = ''
+	data = True
+	while data:
+		data = sock.recv(recv_buffer)
+		buffer += data
+
+		while buffer.find(delim) != -1:
+			line, buffer = buffer.split('\n', 1)
+			yield line
+	return

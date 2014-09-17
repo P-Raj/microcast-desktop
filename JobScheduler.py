@@ -223,6 +223,9 @@ class JobScheduler:
 
             if nonDetchoice == 0:
 
+		for _message in self.environment.readlines():
+			print "read", _message
+
                 _message = self.environment.nonBlockingReceive()
 
                 if _message:
