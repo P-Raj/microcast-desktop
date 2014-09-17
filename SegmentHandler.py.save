@@ -39,8 +39,9 @@ class SegmentHandler:
 
 	self.numSegs = self.metadata["numSegments"]
 
-        for i in meta["Segments"]:
-                self.metadata[i] = {"segmentFrom": meta["Segments"]}
+        for i in range(self.numSegs):
+            for i in meta["Segments"]:
+                self.metadata[i] = {"segmentFrom": meta["Segments"][i]}
                 self.segmentAssignList.append(False)
                 self.downloadedList.append(False)
 

@@ -75,7 +75,6 @@ class Communicator:
 	    soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
             soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
 	    soc.bind(('',self.meComplete[1]))
-	    soc.setblocking(1)
 
             # Ipv4 with TCP connection
             soc.settimeout(5.0)
@@ -84,8 +83,6 @@ class Communicator:
                 soc.connect((peerIp, peerRecvPort))
 		print "[OUT] connected to", (peerIp,peerRecvPort)
 	        peerCounter+=1 
-		self.outChannel[0] = soc
-		#self.incomingPeers.index((peerIp,peerRecvPort))] = soc
 
             except socket.timeout:
 
@@ -96,7 +93,6 @@ class Communicator:
 		pass	
 		
 	print "[OUT] connections established"
-	print self.outChannel
 
     def _setupInChannels(self):
 
@@ -107,8 +103,7 @@ class Communicator:
 
         self.recvSoc.bind(( '', self.meComplete[2] ))
         self.recvSoc.listen(self.numPeers)
-
-	self.recvSoc.setblocking(1)	
+	
         print "Listening at ", socket.gethostname(), " : ", self.meComplete
 
         for _ in range(len(self.peers)-1):
@@ -117,7 +112,6 @@ class Communicator:
             self.inChannel[self.incomingPeers.index(addr)] = client
 
 	print "All incoming channels established"
-	print self.inChannel
 
     def getMyId(self):
 
@@ -128,39 +122,33 @@ class Communicator:
         self.outChannel[dest].send(message)
 
 
-    def readDataFromSocket(self, socket):
+def readDataFromSocket(self, socket):
 
-        data = ''
-        buffer = ''
-        
-        try:
+    data = ''
+    buffer = ''
+    try:
 
-            while True:
-                data = socket.recv(4096)
+        while True:
+            data = socket.recv(4096)
 
-                if not data: 
-                    break
+            if not data: 
+                break
 
-                buffer += data
+            buffer += data
 
-        except error, (errorCode,message): 
-            # error 10035 is no data available, it is non-fatal
-            if errorCode != 10035:
-                print 'socket.error - ('+str(errorCode)+') ' + message
+    except error, (errorCode,message): 
+        # error 10035 is no data available, it is non-fatal
+        if errorCode != 10035:
+            print 'socket.error - ('+str(errorCode)+') ' + message
 
 
-        if data:
-            print 'received '+ buffer
-            return buffer
-        else:
-            return None
-
+    if data:
+        print 'received '+ buffer
+    else:
+        print 'disconnected'
     def _receive(self, fromChannel):
-        message = self.readDataFromSocket(fromChannel)
-        #fromChannel.recv(2000000)
-        if not message:
-		return None
-
+        message = fromChannel.recv(2000000)
+	print "message :" , str(message)
         message = pickle.loads(message)
 
         if isinstance(message,CheckpointMessage):
