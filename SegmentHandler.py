@@ -8,9 +8,8 @@ import json
 
 class SegmentHandler:
 
-    def __init__(self, numSegs):
+    def __init__(self):
         self.metadata = None
-        self.numSegs = numSegs
         self.segmentAssignList = []
         self.downloadedList = []
         """
@@ -30,11 +29,14 @@ class SegmentHandler:
     def downloadMetadata(self, url , videoName ):
         # Static data as of now
         url = url + urllib.urlencode({'init':'True','file': 'music.mp4'})
+	url = "http://192.168.21.20:8888/init=True&file=" + videoName
         meta = json.loads(urllib.urlopen(url).read())
 
         
         self.metadata = {"numSegments": len(meta["Segments"])}
         self.metadata["size"] = meta["size"]
+
+	self.numSegs = self.metadata["numSegments"]
 
         for i in range(self.numSegs):
             for i in meta["Segments"]:
@@ -43,7 +45,7 @@ class SegmentHandler:
                 self.downloadedList.append(False)
 
     def getMetadata(self, segmentId):
-        return self.metadata[segmentId]
+        return self.metadata[str(segmentId)]
 
     def allAssigned(self):
         return all(self.segmentAssignList)

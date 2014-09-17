@@ -6,6 +6,7 @@ import threading
 import socket
 import commands
 import select
+import pickle
 
 class Communicator:
 
@@ -15,7 +16,6 @@ class Communicator:
         self.inChannel = {}
         self.outChannel = {}
 
-        self.totalSegs = cmdArgs["numSegs"]
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
 	self.incomingPeers = [(x[0],int(x[1])) for x in self.peers]
@@ -56,7 +56,7 @@ class Communicator:
         tOut.start()
         tOut.join()
         tIn.join()
-	exit()
+	# connections established
 
 
     def _setupOutChannels(self):
@@ -117,16 +117,13 @@ class Communicator:
 
         return self.procId
 
-    def getNumSegs(self):
-
-        return self.totalSegs
-
     def _send(self, message, dest):
-        message = pickle.dump(message)
+        message = pickle.dumps(message)
         self.outChannel[dest].send(message)
 
     def _receive(self, fromChannel):
-        message = fromChannel.recv()
+        message = fromChannel.recv(2000000)
+	print "message :" , str(message)
         message = pickle.loads(message)
 
         if isinstance(message,CheckpointMessage):
@@ -157,7 +154,7 @@ class Communicator:
 
     def getNonEmptyChannels(self):
 
-        readable, writable, error = select.select([x[0] for x in self.inChannel.values()],[],[])
+        readable, writable, error = select.select([x for x in self.inChannel.values()],[],[])
         return readable
 
     def nonBlockingReceive(self):

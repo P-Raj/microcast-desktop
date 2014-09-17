@@ -4,9 +4,8 @@ from datetime import datetime
 
 class Datastore:
 
-    def __init__(self, totalSegs):
+    def __init__(self):
         self.downloadedSegments = {}
-        self.totalSegs = totalSegs
         #self.file = open(name, mode)
 
     def store(self, message):

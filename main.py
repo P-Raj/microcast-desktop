@@ -10,7 +10,6 @@ def readCmdArgs():
 
     cmdArgs = {}
 
-    cmdArgs["numSegs"] = DEFAULT_CMD_ARGS["numSegs"]
     cmdArgs["logLevel"] = DEFAULT_CMD_ARGS["logLevel"]
     cmdArgs["onlyCp"] = DEFAULT_CMD_ARGS["onlyCp"]
     cmdArgs["peers"] = []
@@ -33,8 +32,6 @@ def readCmdArgs():
             sys.exit()
 
 
-        elif opt in ("-s", "--num_seg"):
-            cmdArgs["numSegs"] = int(arg)
 
         elif opt == '-p':
             peerInfo = arg.split(":")

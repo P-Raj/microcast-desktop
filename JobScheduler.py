@@ -20,9 +20,9 @@ class JobScheduler:
         self.MAX_BACKLOG = 5
         self.environment = environment
         self.SegmentAssignProcId = self.environment.totalProcs - 1
-        self.segmentHandler = SegmentHandler(self.environment.getNumSegs())
+        self.segmentHandler = SegmentHandler()
         self.peers = Peers(self.environment.totalProcs)
-        self.dataHandler = Datastore.Datastore(self.environment.getNumSegs())
+        self.dataHandler = Datastore.Datastore()
         self.memoryFile = "memory" + str(self.environment.getMyId()) + ".dump"
         open(self.memoryFile, "w").close()
 
