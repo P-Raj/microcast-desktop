@@ -224,31 +224,33 @@ class JobScheduler:
 
             def readingChannels():
 
-                for _message in self.environment.readlines():
-                    Logging.logChannelOp(_message.sender,
-                                         _message.receiver,
-                                         'receive',
-                                         _message)
+                for _message in self.environment.receive():
 
-                    if isinstance(_message, Message.DownloadRequestMessage):
-                        assert(_message.sender == self.SegmentAssignProcId)
-                        self.handleDownloadRequestMessage(_message)
+                    if not _message:
+                        Logging.logChannelOp(_message.sender,
+                                             _message.receiver,
+                                             'receive',
+                                             _message)
 
-                    elif isinstance(_message, Message.AdvertisementMessage):
-                        self.handleAdvertisementMessage(_message)
+                        if isinstance(_message, Message.DownloadRequestMessage):
+                            assert(_message.sender == self.SegmentAssignProcId)
+                            self.handleDownloadRequestMessage(_message)
 
-                    elif isinstance(_message, Message.RequestMessage):
-                        self.handleRequestMessage(_message)
+                        elif isinstance(_message, Message.AdvertisementMessage):
+                            self.handleAdvertisementMessage(_message)
 
-                    elif isinstance(_message, Message.SegmentMessage):
-                        self.handleSegmentMessage(_message)
+                        elif isinstance(_message, Message.RequestMessage):
+                            self.handleRequestMessage(_message)
 
-                    elif isinstance(_message, Message.TerminateMessage):
-                        break
+                        elif isinstance(_message, Message.SegmentMessage):
+                            self.handleSegmentMessage(_message)
 
-                    else:
-                        raise Exception("Undefined message \
-                                        found in the channel")
+                        elif isinstance(_message, Message.TerminateMessage):
+                            break
+
+                        else:
+                            raise Exception("Undefined message \
+                                            found in the channel")
 
             readingReqQ = self.handleRequestQueue
 
