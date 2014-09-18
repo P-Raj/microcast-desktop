@@ -11,6 +11,7 @@ import LogViewer
 import subprocess
 import os
 from datetime import datetime, timedelta
+import multithrading
 
 
 class JobScheduler:
@@ -221,14 +222,9 @@ class JobScheduler:
 
             nonDetchoice = random.randrange(4)
 
-            if nonDetchoice == 0:
+            def readingChannels():
 
-		for _message in self.environment.readlines():
-			print "read", _message
-
-                _message = self.environment.nonBlockingReceive()
-
-                if _message:
+                for _message in self.environment.readlines():
                     Logging.logChannelOp(_message.sender,
                                          _message.receiver,
                                          'receive',
@@ -254,14 +250,15 @@ class JobScheduler:
                         raise Exception("Undefined message \
                                         found in the channel")
 
-            elif nonDetchoice == 1:
-                self.handleRequestQueue()
+            readingReqQ = self.handleRequestQueue
 
-            elif nonDetchoice == 2:
-                self.handleDownloadRequestQueue()
+            readingDnldReqQ = self.handleDownloadRequestQueue
 
-            else:
-                self.handleAdvertisementQueue()
+            readingAdQ = self.handleAdvertisementQueue
+
+            chanThread = multithreading.Thread(target=readingChannels)
+            chanThread.start()
+            chanThread.join()
 
     def runMicroDownload(self):
         self.microDownload()
