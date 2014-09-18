@@ -11,7 +11,7 @@ import LogViewer
 import subprocess
 import os
 from datetime import datetime, timedelta
-import multithrading
+import threading
 
 
 class JobScheduler:
@@ -256,7 +256,7 @@ class JobScheduler:
 
             readingAdQ = self.handleAdvertisementQueue
 
-            chanThread = multithreading.Thread(target=readingChannels)
+            chanThread = threading.Thread(target=readingChannels)
             chanThread.start()
             chanThread.join()
 

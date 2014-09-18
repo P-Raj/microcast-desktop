@@ -16,6 +16,8 @@ class Communicator:
         self.inChannel = {}
         self.outChannel = {}
 
+	self.rec = Queue.Queue()
+	
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
 	self.incomingPeers = [(x[0],int(x[1])) for x in self.peers]
@@ -115,24 +117,32 @@ class Communicator:
             self.inChannel[self.incomingPeers.index(addr)] = client
 
 	print "All incoming channels established"
-	print self.inChannel
+	for soc in self.inChannel.values():
+		t = threading.Thread(target=self.readlines, args=[soc])
+		t.start()
+
 
     def getMyId(self):
 
         return self.procId
 
     def _send(self, message, dest):
+        print "Sending message" , message, "to ", dest
         message = pickle.dumps(message)
         self.outChannel[dest].sendall(message)
 
 
     def _receive(self, fromChannel):
+	"""
         message = self.readDataFromSocket(fromChannel)
         #fromChannel.recv(2000000)
         if not message:
 		return None
-
-        message = pickle.loads(message)
+	"""
+	if self.rec.empty():
+		return None
+	
+        message = self.rec.get()
 
         if isinstance(message,CheckpointMessage):
             self.ckptCntrl.handleRequests(message)
@@ -183,5 +193,5 @@ class Communicator:
 
 		while buffer.find(delim) != -1:
 			line, buffer = buffer.split('\n', 1)
-			yield line
+			self.rec.put(json.loads(line))
 	return
