@@ -131,19 +131,17 @@ class Communicator:
     def _send(self, message, dest):
         print "Sending message" , message, "to ", dest, " ",	
 
-        message = pickle.dumps(message) + "EOF"
+        message = pickle.dumps(message)
 
 	#sending length
 	message_length = len(message)
 	
 	print "Sending length" , message_length
 
-	self.outChannel[dest].send(str(message_length) + ",")
+	self.outChannel[dest].send('%16s' %str(message_length))
 
 	packetCounter = 0
 	for message_i in range(0,message_length,1024):
-		print packetCounter,
-		packetCounter+=1
 		self.outChannel[dest].send(message[:1024])
 		message = message[1024:]
 	print "message sending complete"
@@ -201,16 +199,18 @@ class Communicator:
 	buffer = ''
 	data  = True
 	lines = []
+	item = ''
+	firstRun = True
 
-	while data:
-		item  = sock.recv(1024)
-		itemlen, item  = item.split(",")
-		itemlen = int(itemlen)
- 
-		while len(item)<itemlen:
-			item += sock.recv(1024)
-		data=item[itemlen:]
-		item=item[:itemlen]
+	while True:
+		itemlen  = int(sock.recv(16))
+ 		Lindex = itemlen/1024
+
+		for index in range(Lindex):
+			item += soc.recv(1024)
+		item += soc.recv(itemlen%1024)
+
+		assert(len(item) == itemlen)
 		
-		print pickle.loads(item)
+		self.rec.put(pickle.loads(item))
 	return
