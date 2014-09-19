@@ -135,12 +135,12 @@ class Communicator:
 
 	#sending length
 	message_length = len(message)
-	
+	input("Allow sending")
 	print "Sending length" , message_length
 
-	self.outChannel[dest].send('%16s' %str(message_length))
+	self.outChannel[dest].send('<MESSAGELENGTH>%s</MESSAGELENGTH>' %str(message_length))
+	input("Sent length")
 
-	packetCounter = 0
 	for message_i in range(0,message_length,1024):
 		self.outChannel[dest].send(message[:1024])
 		message = message[1024:]
@@ -203,14 +203,16 @@ class Communicator:
 	firstRun = True
 
 	while True:
-		itemlen  = int(sock.recv(16))
- 		Lindex = itemlen/1024
+		msg = ''
+		while '<MESSAGELENGTH>' not in msg and '</MESSAGELENGTH>' not in msg:
+			msg = sock.recv(1024)
+		msglen = int(msg.split('</MESSAGELENGTH>')[0].split('<MESSAGELENGTH>')[1])
+		msg = msg.split('</MESSAGELENGTH>')[1]
 
-		for index in range(Lindex):
-			item += soc.recv(1024)
-		item += soc.recv(itemlen%1024)
+		while len(msg) < msglen:
+			msg += sock.recv(msglen-len(msg))
 
-		assert(len(item) == itemlen)
+		assert(len(msg) == msglen)
 		
-		self.rec.put(pickle.loads(item))
+		self.rec.put(pickle.loads(msg))
 	return
