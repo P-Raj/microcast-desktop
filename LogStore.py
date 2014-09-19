@@ -15,7 +15,18 @@ def initDataHistory(procId):
 	global dataFile
 
 def writeLog(string):
-	print string
+	if string['type'] == 'channel':
+		op = "C" + str(string["from"]) + str(string["to"])
+		op += "."
+		op += string["op"]
+		op = op + "(" + str(string["message"]) + ")" 
+	elif string['type'] == 'process':
+		op = "P" + str(string["procId"]) + "."
+		op += string["op"]
+		op = op + "(" + string.get("queue","None") + "," + string.get("message","None") + ")"
+	else:
+		raise Exception("Uidentified log")
+	print op
 
 
 class File:

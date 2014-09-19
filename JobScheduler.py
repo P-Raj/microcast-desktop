@@ -346,7 +346,7 @@ class JobScheduler:
 	    nonDetChoice += 1
             if nonDetChoice %2 ==  0:
 
-                _message = self.environment.nonBlockingReceive()
+                _message = self.environment._receive()
 
                 if _message:
 
