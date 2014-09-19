@@ -22,6 +22,7 @@ class Communicator:
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
 	self.incomingPeers = [(x[0],int(x[1])) for x in self.peers]
+	self.outgoingPeers = [(x[0],int(x[2])) for x in self.peers]
         self.me =  commands.getoutput("hostname -I").strip()
 
 
@@ -86,7 +87,7 @@ class Communicator:
                 soc.connect((peerIp, peerRecvPort))
 		print "[OUT] connected to", (peerIp,peerRecvPort)
 	        peerCounter+=1 
-		self.outChannel[0] = soc
+		self.outChannel[self.outgoingPeers.index((peerIp,peerRecvPort))] = soc
 		#self.incomingPeers.index((peerIp,peerRecvPort))] = soc
 
             except socket.timeout:
