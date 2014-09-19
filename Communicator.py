@@ -128,10 +128,9 @@ class Communicator:
         return self.procId
 
     def _send(self, message, dest):
-        print "Sending message" , message, "to ", dest
-        message = pickle.dumps(message)
-        self.outChannel[dest].sendall(message)
-
+        print "Sending message" , message, "to ", dest, " ",	
+        message = pickle.dumps(message) + "EOF"
+        self.outChannel[dest].send(message)
 
     def _receive(self):
 
@@ -180,7 +179,7 @@ class Communicator:
             return self._receive(choice(nonEmptyChannels))
         return None
 
-    def readlines(self, sock, recv_buffer=4096, delim='\n'):
+    def readlines(self, sock, recv_buffer=4096):
 
 	buffer = ''
 	data = True
@@ -191,14 +190,14 @@ class Communicator:
 		buffer += data
 
 		while buffer.find(delim) != -1:
-			line, buffer = buffer.split('\n', 1)
+			line, buffer = buffer.split('EOF', 1)
 			try:
-				line = json.loads("".join(lines + [line]))
+				line = json.loads("EOF".join(lines + [line]))
 				lines = []
 				print "Received ", str(line)
-				self.recv.put(line)
-			except:
-				print "Failed to unpickle ", line
+				self.rec.put(line)
+			except Exception as e:
+				print "Failed to unpickle ", line , "Reason :", e
 				lines.append(line)
 				
 	return
