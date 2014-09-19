@@ -11,6 +11,7 @@ class Peers:
 
     def initPeers(self, numPeers):
         #initializes self.peers
+	print "initializing peers"
         self.peers = [0 for peerId in range(numPeers)]
 
     def getAPeer(self):

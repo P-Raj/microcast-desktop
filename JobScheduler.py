@@ -210,7 +210,6 @@ class JobScheduler:
 
         while True:
 
-            self.dumpMemory()
 
             if float(str(self.dataHandler)) == 100:
                 completionMsg = Message.DownloadCompleteMessage(
@@ -261,6 +260,17 @@ class JobScheduler:
 
             chanThread = threading.Thread(target=readingChannels)
             chanThread.start()
+
+	    reqThread = threading.Thread(target=readingReqQ)
+	    reqThread.start()
+	    dnldThread = threading.Thread(target=readingDnldReqQ)
+	    dnldThread.start()
+	    adThread = threading.Thread(target=readingAdQ)
+	    adThread.start()
+
+	    reqThread.join()
+	    dnldThread.join()
+	    adThread.join()
             chanThread.join()
 
     def runMicroDownload(self):
@@ -327,14 +337,14 @@ class JobScheduler:
         assert(self.environment.procId == self.SegmentAssignProcId)
 
         self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
+	print "Metadata download complete"
         self.peers.initPeers(self.environment.totalProcs - 1)
 
+	nonDetChoice = 0
+
         while not self.segmentHandler.allAssigned():
-
-            nonDetChoice = random.randrange(2)
-            self.dumpMemory()
-
-            if nonDetChoice == 0:
+	    nonDetChoice += 1
+            if nonDetChoice %2 ==  0:
 
                 _message = self.environment.nonBlockingReceive()
 
@@ -371,5 +381,4 @@ class JobScheduler:
                 peerBackLog = self.peers.getBackLog(peerId)
 
                 if peerBackLog < self.MAX_BACKLOG:
-
                     self.sendDownloadRequest(peerId)

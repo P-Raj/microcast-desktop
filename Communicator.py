@@ -135,11 +135,9 @@ class Communicator:
 
 	#sending length
 	message_length = len(message)
-	input("Allow sending")
 	print "Sending length" , message_length
 
 	self.outChannel[dest].send('<MESSAGELENGTH>%s</MESSAGELENGTH>' %str(message_length))
-	input("Sent length")
 
 	for message_i in range(0,message_length,1024):
 		self.outChannel[dest].send(message[:1024])
