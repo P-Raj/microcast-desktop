@@ -133,27 +133,30 @@ class JobScheduler:
         
     def handleDownloadRequestQueue(self):
 
-        segment = self.downloadRequests.get()
+	while True:
+		if not self.downloadRequests.empty() and not self.isDownloading:
+        		segment = self.downloadRequests.get()
 
-        Logging.logProcessOp(processId=self.environment.procId,
-                             op="pop",
-                             depQueue="DwnReqQ",
-                             message=segment)
+		        Logging.logProcessOp(processId=self.environment.procId,
+                		             op="pop",
+                            		     depQueue="DwnReqQ",
+                        		     message=segment)
 
-        downloadThread = threading.Thread(target=self.download, args =[segment])
-        downloadThread.start()
+        		downloadThread = threading.Thread(target=self.download, args =[segment])
+        		downloadThread.start()
 
 
         
     def handleRequestQueue(self):
-        if not self.requestQueue.empty():
-            reqMessage = self.requestQueue.get()
-            responseMsg = reqMessage.getResponse()
-            Logging.logProcessOp(processId=self.environment.procId,
-                                 op="pop",
-                                 depQueue="ReqQ",
-                                 message=reqMessage)
-            self.environment.send(responseMsg.receiver, responseMsg)
+	while True:
+        	if not self.requestQueue.empty():
+            		reqMessage = self.requestQueue.get()
+            		responseMsg = reqMessage.getResponse()
+            		Logging.logProcessOp(processId=self.environment.procId,
+                        		     op="pop",
+                        		     depQueue="ReqQ",
+                                 	     message=reqMessage)
+            		self.environment.send(responseMsg.receiver, responseMsg)
 
     def handleDownloadRequestMessage(self, _message):
 
@@ -262,8 +265,10 @@ class JobScheduler:
 
 	    reqThread = threading.Thread(target=readingReqQ)
 	    reqThread.start()
+
 	    dnldThread = threading.Thread(target=readingDnldReqQ)
 	    dnldThread.start()
+
 	    adThread = threading.Thread(target=readingAdQ)
 	    adThread.start()
 

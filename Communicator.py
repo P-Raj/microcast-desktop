@@ -130,7 +130,6 @@ class Communicator:
         return self.procId
 
     def _send(self, message, dest):
-        print "Sending message" , message, "to ", dest, " ",	
 
         message = pickle.dumps(message)
 
@@ -209,7 +208,7 @@ class Communicator:
 		while len(msg) < msglen:
 			msg += sock.recv(msglen-len(msg))
 
-		assert(len(msg) == msglen)
+		#assert(len(msg) == msglen)
 		
 		self.rec.put(pickle.loads(msg))
 	return
