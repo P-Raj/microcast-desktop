@@ -93,6 +93,7 @@ class Communicator:
 
                 print "Timeout issue"
                 raise SystemExit(0)
+
 	    
 	    except:
 		pass	
@@ -129,8 +130,26 @@ class Communicator:
 
     def _send(self, message, dest):
         print "Sending message" , message, "to ", dest, " ",	
+
         message = pickle.dumps(message) + "EOF"
-        self.outChannel[dest].send(message)
+
+	#sending length
+	message_length = len(message)
+	
+	print "Sending length" , message_length
+
+	self.outChannel[dest].send(str(message_length) + ",")
+
+	packetCoutner = 0
+	for message_i in range(0,message_length,1024):
+		print packetCounter
+		packetCounter+=1
+		self.outChannel[dest].send(message[:1024])
+		message = message[1024:]
+	print "message sending complete"	
+	
+	print len(message)
+        
 
     def _receive(self):
 
@@ -182,22 +201,19 @@ class Communicator:
     def readlines(self, sock, recv_buffer=4096):
 
 	buffer = ''
-	data = True
+	item  = True
 	lines = []
 
 	while data:
-		data = sock.recv(recv_buffer)
-		buffer += data
-
-		while buffer.find(delim) != -1:
-			line, buffer = buffer.split('EOF', 1)
-			try:
-				line = json.loads("EOF".join(lines + [line]))
-				lines = []
-				print "Received ", str(line)
-				self.rec.put(line)
-			except Exception as e:
-				print "Failed to unpickle ", line , "Reason :", e
-				lines.append(line)
-				
+		item  = sock.recv(1024)
+		itemlen, item  = packet.split(",")
+		itemlen = int(itemlen)
+ 
+		while len(item)<itemlen:
+			item += sock.recv(1024)
+		data=item[itemlen:]
+		item=item[:itemlen]
+		
+		print pickle.loads(item)
+		exit()			
 	return
