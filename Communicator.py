@@ -140,7 +140,7 @@ class Communicator:
 
 	self.outChannel[dest].send(str(message_length) + ",")
 
-	packetCoutner = 0
+	packetCounter = 0
 	for message_i in range(0,message_length,1024):
 		print packetCounter
 		packetCounter+=1
@@ -201,7 +201,7 @@ class Communicator:
     def readlines(self, sock, recv_buffer=4096):
 
 	buffer = ''
-	item  = True
+	data  = True
 	lines = []
 
 	while data:
