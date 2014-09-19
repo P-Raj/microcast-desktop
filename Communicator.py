@@ -181,13 +181,24 @@ class Communicator:
         return None
 
     def readlines(self, sock, recv_buffer=4096, delim='\n'):
+
 	buffer = ''
 	data = True
+	lines = []
+
 	while data:
 		data = sock.recv(recv_buffer)
 		buffer += data
 
 		while buffer.find(delim) != -1:
 			line, buffer = buffer.split('\n', 1)
-			self.rec.put(json.loads(line))
+			try:
+				line = json.loads("".join(lines + [line]))
+				lines = []
+				print "Received ", str(line)
+				self.recv.put(line)
+			except:
+				print "Failed to unpickle ", line
+				lines.append(line)
+				
 	return
