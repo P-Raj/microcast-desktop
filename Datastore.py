@@ -20,8 +20,8 @@ class Datastore:
         self.downloadedSegments[segmentId] = segmentProperty
 
     def __str__(self):
-        pcDwnld = float(len(self.downloadedSegments.keys()))/self.totalSegs
-        return str(pcDwnld*100)
+        pcDwnld = float(len(self.downloadedSegments.keys()))
+        return str(1)
 
     def getSegment(self, segmentId):
         self.downloadedSegments.get(segmentId, None)

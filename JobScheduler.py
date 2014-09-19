@@ -224,9 +224,10 @@ class JobScheduler:
 
             def readingChannels():
 
-                for _message in self.environment.receive():
-
-                    if not _message:
+               
+		while True:
+		    _message = self.environment._receive()
+                    if  _message:
                         Logging.logChannelOp(_message.sender,
                                              _message.receiver,
                                              'receive',

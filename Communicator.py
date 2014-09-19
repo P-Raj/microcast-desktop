@@ -7,6 +7,7 @@ import socket
 import commands
 import select
 import pickle
+import json
 
 class Communicator:
 
