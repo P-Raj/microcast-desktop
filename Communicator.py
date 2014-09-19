@@ -158,9 +158,9 @@ class Communicator:
             self.ckptCntrl.handleRequests(message)
             return None
 
-        if self.ckptCntrl.messageConsumptionAllowed(recvdMsg):
+        if self.ckptCntrl.messageConsumptionAllowed(message):
             #consume the message
-            return recvdMsg
+            return message
 
         return None
 
