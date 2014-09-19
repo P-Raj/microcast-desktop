@@ -142,13 +142,11 @@ class Communicator:
 
 	packetCounter = 0
 	for message_i in range(0,message_length,1024):
-		print packetCounter
+		print packetCounter,
 		packetCounter+=1
 		self.outChannel[dest].send(message[:1024])
 		message = message[1024:]
-	print "message sending complete"	
-	
-	print len(message)
+	print "message sending complete"
         
 
     def _receive(self):
@@ -206,7 +204,7 @@ class Communicator:
 
 	while data:
 		item  = sock.recv(1024)
-		itemlen, item  = packet.split(",")
+		itemlen, item  = item.split(",")
 		itemlen = int(itemlen)
  
 		while len(item)<itemlen:
@@ -215,5 +213,4 @@ class Communicator:
 		item=item[:itemlen]
 		
 		print pickle.loads(item)
-		exit()			
 	return
