@@ -12,7 +12,7 @@ import subprocess
 import os
 from datetime import datetime, timedelta
 import threading
-
+import urllib
 
 class JobScheduler:
 
@@ -81,7 +81,6 @@ class JobScheduler:
     def download(self, segment):
         self.isDownloading = True
         self.dwnldStartTime = datetime.now()
-        threading.Thread(target=download, args=[segment])
         
         Logging.logProcessOp(processId=self.environment.procId,
                              op="startDownloading",
@@ -89,7 +88,7 @@ class JobScheduler:
                              message=segment)
 
 
-        dataSeg = urllib.urlopen(self.video_url+"/request=True&file=music.mp4&start=0").read()
+        dataSeg = urllib.urlopen(self.video_url+"request=True&file=music.mp4&start=0").read()
         #datsSeg in memory
 
 
@@ -141,7 +140,7 @@ class JobScheduler:
                              depQueue="DwnReqQ",
                              message=segment)
 
-        downloadThread = threading.Thread(target=download, args =[segment])
+        downloadThread = threading.Thread(target=self.download, args =[segment])
         downloadThread.start()
 
 

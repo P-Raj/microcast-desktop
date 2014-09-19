@@ -23,7 +23,7 @@ def writeLog(string):
 	elif string['type'] == 'process':
 		op = "P" + str(string["procId"]) + "."
 		op += string["op"]
-		op = op + "(" + string.get("queue","None") + "," + string.get("message","None") + ")"
+		op = op + "(" + string.get("queue","None") + "," + str(string.get("message","None")) + ")"
 	else:
 		raise Exception("Uidentified log")
 	print op
