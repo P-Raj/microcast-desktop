@@ -132,13 +132,8 @@ class Communicator:
         self.outChannel[dest].sendall(message)
 
 
-    def _receive(self, fromChannel):
-	"""
-        message = self.readDataFromSocket(fromChannel)
-        #fromChannel.recv(2000000)
-        if not message:
-		return None
-	"""
+    def _receive(self):
+
 	if self.rec.empty():
 		return None
 	
