@@ -29,13 +29,27 @@ class Communicator:
 
         self.ckptCntrl = CpHandler(self.procId, self.totalProcs)
 
+        try:
+            self.start()
+        except KeyboardInterrupt:
+            print "Interrupted by user"
+            print "Closing open sockets..."
+            self.close()
+            print "done"
+
+    def start(self):
+
         tOut = threading.Thread(target=self.enableOutChan)
         tIn = threading.Thread(target=self.enableInChan)
         tIn.start()
         tOut.start()
         tOut.join()
         tIn.join()
-        # connections established
+
+    def close(self):
+
+        for openSockets in self.outChan.values() + self.inChan.values():
+            openSockets.shutdown(socket.SHUT_RDWR)
 
     def setChannels(self):
 
@@ -208,11 +222,14 @@ class Communicator:
 
             msg = ''
 
-            while '<MESSAGELENGTH>' not in msg and '</MESSAGELENGTH>' not in msg:
+            opTag = '<MESSAGELENGTH>'
+            clTag = '</MESSAGELENGTH>'
+
+            while not all(tag in msg for tag in (opTag, clTag)):
                 msg = sock.recv(1024)
 
-            msglen = int(msg.split('</MESSAGELENGTH>')[0].split('<MESSAGELENGTH>')[1])
-            msg = msg.split('</MESSAGELENGTH>')[1]
+            msglen = int(msg.split(clTag)[0].split(opTag)[1])
+            msg = msg.split(opTag)[1]
 
             while len(msg) < msglen:
                 msg += sock.recv(msglen-len(msg))
