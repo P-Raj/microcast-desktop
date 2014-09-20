@@ -9,27 +9,51 @@ import select
 import pickle
 import json
 
-class Communicator:
 
+class Communicator:
 
     def __init__(self, cmdArgs):
 
-        self.inChannel = {}
-        self.outChannel = {}
-
-	self.rec = Queue.Queue()
-	
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
-	self.incomingPeers = [(x[0],int(x[1])) for x in self.peers]
-	self.outgoingPeers = [(x[0],int(x[2])) for x in self.peers]
-        self.me =  commands.getoutput("hostname -I").strip()
 
+        self.inPeers = [(x[0], int(x[1])) for x in self.peers]
+        self.outPeers = [(x[0], int(x[2])) for x in self.peers]
 
-        self.connections = dict((_id,host) for _id,host in enumerate(self.peers))
+        self.setChannels()
+        self.printChannels()
 
+        assert(len(self.connections.keys()) == len(self.peers)-1)
+
+        self.numPeers = len(self.connections.keys())
+
+        self.ckptCntrl = CpHandler(self.procId, self.totalProcs)
+
+        tOut = threading.Thread(target=self.enableOutChan)
+        tIn = threading.Thread(target=self.enableInChan)
+        tIn.start()
+        tOut.start()
+        tOut.join()
+        tIn.join()
+        # connections established
+
+    def setChannels(self):
+
+        self.rec = Queue.Queue()
+        self.inChan = dict()
+        self.outChan = dict()
+
+        self.inPeers = [(x[0], int(x[1])) for x in self.peers]
+        self.outPeers = [(x[0], int(x[2])) for x in self.peers]
+
+        self.me = commands.getoutput("hostname -I").strip()
+        self.meComplete = None
+
+        self.connections = dict((_id, host)
+                                for _id, host in enumerate(self.peers))
 
         self.procId = None
+
         # remove self from the coneections
         # and updating procId
 
@@ -40,90 +64,77 @@ class Communicator:
                 del self.connections[procId]
                 break
 
-        print "me : " , self.meComplete
-        print "connected items :"
-        for p in self.connections.items():
-            print p
+        if not self.meComplete:
+            raise Exception("The system is not a part of the cluster")
+            exit(1)
 
-        
-        assert(len(self.connections.keys()) == len(self.peers)-1)
-        self.numPeers = len(self.connections.keys())
+    def printChannels(self):
 
+        print "System : ", self.meComplete
+        print "Peers :"
+        for _id in sorted(self.connections.keys()):
+            print _id, ". ", self.connections[_id]
 
-        self.ckptCntrl = CpHandler(self.procId, self.totalProcs)
+    def enableOutChan(self):
 
-        tOut = threading.Thread(target=self._setupOutChannels)
-        tIn = threading.Thread(target=self._setupInChannels)
+        keys = self.connections.keys()
 
-        #tOut.start()
-        tIn.start()
-        tOut.start()
-        tOut.join()
-        tIn.join()
-	# connections established
+        peerCounter = 0
 
+        while peerCounter < len(keys):
 
-    def _setupOutChannels(self):
-
-	keys = self.connections.keys()
-	peerCounter = 0
-	while peerCounter < len(keys):
-	    _id = keys[peerCounter]	
-            #for _id in self.connections:
+            _id = keys[peerCounter]
             peer = self.connections[_id]
-            peerIp = peer[0]
-            peerSendPort = peer[1]
-            peerRecvPort = peer[2]
-            
-            
-	    soc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
-            soc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
-	    soc.bind(('',self.meComplete[1]))
+
+            peerIp, peerSendPort, peerRecvPort = peer[:3]
+
+            soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            soc.bind(('', self.meComplete[1]))
 
             # Ipv4 with TCP connection
             soc.settimeout(5.0)
 
             try:
                 soc.connect((peerIp, peerRecvPort))
-		print "[OUT] connected to", (peerIp,peerRecvPort)
-	        peerCounter+=1 
-		self.outChannel[self.outgoingPeers.index((peerIp,peerRecvPort))] = soc
-		#self.incomingPeers.index((peerIp,peerRecvPort))] = soc
+                peerCounter += 1
+                self.outChan[self.outPeers.index((peerIp, peerRecvPort))] = soc
+                print "[OUT] connected to", (peerIp, peerRecvPort)
 
             except socket.timeout:
-
                 print "Timeout issue"
                 raise SystemExit(0)
 
-	    
-	    except:
-		pass	
-		
-	print "[OUT] connections established"
-	print self.outChannel
+            except:
+                pass
 
-    def _setupInChannels(self):
+        print "[OUT] connections established"
 
-        self.recvSoc = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+        for i, chan in enumerate(self.outChan.keys()):
+            print i, ". ", chan
+
+    def enableInChan(self):
+
+        self.recvSoc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Ipv4 with TCP connection
 
-        self.recvSoc.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
+        self.recvSoc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.recvSoc.bind(( '', self.meComplete[2] ))
+        self.recvSoc.bind(('', self.meComplete[2]))
         self.recvSoc.listen(self.numPeers)
 
         print "Listening at ", socket.gethostname(), " : ", self.meComplete
 
         for _ in range(len(self.peers)-1):
-            (client,addr) = self.recvSoc.accept()
-            print "Received connection from " , addr
-            self.inChannel[self.incomingPeers.index(addr)] = client
+            (client, addr) = self.recvSoc.accept()
+            print "Received connection from ", addr
+            self.inChan[self.inPeers.index(addr)] = client
 
-	print "All incoming channels established"
-	for soc in self.inChannel.values():
-		t = threading.Thread(target=self.readlines, args=[soc])
-		t.start()
+        print "[IN] connections established"
 
+        for soc in self.inChan.values():
+            t = threading.Thread(target=self.readlines, args=[soc])
+            t.start()
 
     def getMyId(self):
 
@@ -133,24 +144,23 @@ class Communicator:
 
         message = pickle.dumps(message)
 
-	#sending length
-	message_length = len(message)
+        #sending length
+        message_length = len(message)
+        self.outChan[dest].send('<MESSAGELENGTH>%s</MESSAGELENGTH>'
+                                % str(message_length))
 
-	self.outChannel[dest].send('<MESSAGELENGTH>%s</MESSAGELENGTH>' %str(message_length))
-
-	for message_i in range(0,message_length,1024):
-		self.outChannel[dest].send(message[:1024])
-		message = message[1024:]
-        
+        for message_i in range(0, message_length, 1024):
+            self.outChan[dest].send(message[:1024])
+            message = message[1024:]
 
     def _receive(self):
 
-	if self.rec.empty():
-		return None
-	
+        if self.rec.empty():
+            return None
+
         message = self.rec.get()
 
-        if isinstance(message,CheckpointMessage):
+        if isinstance(message, CheckpointMessage):
             self.ckptCntrl.handleRequests(message)
             return None
 
@@ -160,17 +170,17 @@ class Communicator:
 
         return None
 
-
     def trySendingCp(self):
+
         if self.ckptCntrl.checkpointInitAllowed():
             for msg in self.ckptCntrl.checkpointInit():
                 self._send(msg, dest=msg.receiver)
 
     def send(self, toProc, message):
+
         self.trySendingCp()
         message.setBB(self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken)
-        self._send(message,dest=toProc)
-
+        self._send(message, dest=toProc)
 
     def sendToRandom(self, message):
 
@@ -178,7 +188,8 @@ class Communicator:
 
     def getNonEmptyChannels(self):
 
-        readable, writable, error = select.select([x for x in self.inChannel.values()],[],[])
+        readable, writable, error = select.select(
+            [x for x in self.inChan.values()], [], [])
         return readable
 
     def nonBlockingReceive(self):
@@ -188,27 +199,24 @@ class Communicator:
         nonEmptyChannels = self.getNonEmptyChannels()
         if nonEmptyChannels:
             return self._receive(choice(nonEmptyChannels))
+
         return None
 
-    def readlines(self, sock, recv_buffer=4096):
+    def readlines(self, sock):
 
-	buffer = ''
-	data  = True
-	lines = []
-	item = ''
-	firstRun = True
+        while True:
 
-	while True:
-		msg = ''
-		while '<MESSAGELENGTH>' not in msg and '</MESSAGELENGTH>' not in msg:
-			msg = sock.recv(1024)
-		msglen = int(msg.split('</MESSAGELENGTH>')[0].split('<MESSAGELENGTH>')[1])
-		msg = msg.split('</MESSAGELENGTH>')[1]
+            msg = ''
 
-		while len(msg) < msglen:
-			msg += sock.recv(msglen-len(msg))
+            while '<MESSAGELENGTH>' not in msg and '</MESSAGELENGTH>' not in msg:
+                msg = sock.recv(1024)
 
-		#assert(len(msg) == msglen)
-		
-		self.rec.put(pickle.loads(msg))
-	return
+            msglen = int(msg.split('</MESSAGELENGTH>')[0].split('<MESSAGELENGTH>')[1])
+            msg = msg.split('</MESSAGELENGTH>')[1]
+
+            while len(msg) < msglen:
+                msg += sock.recv(msglen-len(msg))
+
+            self.rec.put(pickle.loads(msg))
+
+        return

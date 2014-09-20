@@ -1,10 +1,10 @@
 # contains information about the segments
 # to be used only by the MicroDownload.py
 
-import time
 import random
 import urllib
 import json
+
 
 class SegmentHandler:
 
@@ -12,37 +12,26 @@ class SegmentHandler:
         self.metadata = None
         self.segmentAssignList = []
         self.downloadedList = []
-        """
-            self.metadata fields
-            ~~~~~~~~~~~~~~~~~~~~~~
-            {
-                numSegments :  N,
-                1 : {
-                        segmentDownloadtime: K0,
-                        segmentFrom : K1,
-                        segmentTo : K2
-                    }
-                .......
-            }
-        """
 
-    def downloadMetadata(self, url , videoName ):
+    def downloadMetadata(self, url, videoName):
         # Static data as of now
-        url = url + urllib.urlencode({'init':'True','file': 'music.mp4'})
-	url = "http://192.168.21.20:8888/init=True&file=" + videoName
-	print "Downloading metadata from : ", url
+        url = url + urllib.urlencode({'init': 'True', 'file': videoName})
+        print "Downloading metadata from : ", url
         meta = json.loads(urllib.urlopen(url).read())
 
-        
-        self.metadata = {"numSegments": len(meta["Segments"])}
-        self.metadata["size"] = meta["size"]
+        self.metadata = dict(
+            ("numSegments", len(meta["Segments"])),
+            ("size", meta["size"]))
 
-	self.numSegs = self.metadata["numSegments"]
+        self.numSegs = self.metadata["numSegments"]
 
-        for i in meta["Segments"]:
-                self.metadata[i] = {"segmentFrom": meta["Segments"]}
-                self.segmentAssignList.append(False)
-                self.downloadedList.append(False)
+        self.segmentAssignList = [False] * self.numSegs
+        self.downloadedList = [False] * self.numSegs
+
+        self.metadata.update(
+            dict(
+                (str(x), dict(("segmentFrom", meta["Segments"][x])))
+                for x in meta["segments"]))
 
     def getMetadata(self, segmentId):
         return self.metadata[str(segmentId)]
