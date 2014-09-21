@@ -229,7 +229,7 @@ class Communicator:
                 msg = sock.recv(1024)
 
             msglen = int(msg.split(clTag)[0].split(opTag)[1])
-            msg = msg.split(opTag)[1]
+            msg = msg.split(clTag)[1]
 
             while len(msg) < msglen:
                 msg += sock.recv(msglen-len(msg))

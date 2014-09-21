@@ -33,8 +33,10 @@ class JobScheduler:
         self.downloadingSegment = None
         self.dwnldStartTime = None
 
-        self.video_url = "http://127.1.1:8888/"
+        self.video_url = "http://192.168.21.20:8888/"
         self.video_name = "music.mp4"
+
+        self.peerLock = threading.Lock()
 
     def isSegmentAssigner(self):
 
@@ -253,9 +255,9 @@ class JobScheduler:
         segFilename = "music.mp4"
         segStart = 0
         dataSeg = urllib.urlopen(self.video_url +
-                                 urllib.urlencode(dict(("request", "True"),
+                                 urllib.urlencode(dict((("request", "True"),
                                                        ("file", segFilename),
-                                                       ("start", segStart)))
+                                                       ("start", segStart))))
                                  ).read()
         #datsSeg in memory
 
@@ -298,7 +300,9 @@ class JobScheduler:
 
     def handleRequestResponseMessage(self, _message):
 
+        self.peerLock.acquire()
         self.peers.removeBackLog(_message.sender)
+        self.peerLock.release()
 
         if not _message.status:
 
@@ -342,7 +346,9 @@ class JobScheduler:
 
         self.segmentHandler.assignSegment(requestSegmentId)
 
+        self.peerLock.acquire()
         self.peers.addBackLog(peerId)
+        self.peerLock.release()
 
         Logging.logChannelOp(chanFrom=self.SegmentAssignProcId,
                              chanTo=peerId,
@@ -351,7 +357,7 @@ class JobScheduler:
 
     def handleIncomingChannelMD(self):
 
-        while self.segmentHandler.allAssigned():
+        while True:
 
             _message = self.environment._receive()
 
@@ -381,10 +387,12 @@ class JobScheduler:
 
     def handleOutgoingChannelMD(self):
 
-        while True:
+        while not self.segmentHandler.allAssigned():
 
+            self.peerLock.acquire()
             peerId = self.peers.leastBusyPeer()
             peerBackLog = self.peers.getBackLog(peerId)
+            self.peerLock.release()
 
             if peerBackLog < self.MAX_BACKLOG:
                 self.sendDownloadRequest(peerId)

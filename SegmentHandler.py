@@ -19,19 +19,17 @@ class SegmentHandler:
         print "Downloading metadata from : ", url
         meta = json.loads(urllib.urlopen(url).read())
 
-        self.metadata = dict(
+        self.metadata = dict((
             ("numSegments", len(meta["Segments"])),
-            ("size", meta["size"]))
+            ("size", meta["size"])))
 
         self.numSegs = self.metadata["numSegments"]
 
         self.segmentAssignList = [False] * self.numSegs
         self.downloadedList = [False] * self.numSegs
 
-        self.metadata.update(
-            dict(
-                (str(x), dict(("segmentFrom", meta["Segments"][x])))
-                for x in meta["segments"]))
+        for x in meta["Segments"]:
+            self.metadata[str(x)] = {"segmentFrom":meta["Segments"][x]}
 
     def getMetadata(self, segmentId):
         return self.metadata[str(segmentId)]
@@ -56,4 +54,4 @@ class SegmentHandler:
         if not self.allAssigned():
             return random.choice(
                 [i for i, x in enumerate(self.segmentAssignList) if not x])
-        return -1
+        return None
