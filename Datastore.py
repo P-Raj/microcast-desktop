@@ -8,18 +8,28 @@ class Datastore:
 
     def __init__(self):
         self.downloadedSegments = {}
+        self.file = open("DataFile","w")
+        self.bufferSize =  10 #number of segments downloaded before storing
+        self.buffer = []
         #self.file = open(name, mode)
 
-    def store(self, message):
-        _dumpMsg = {'data': message,
-                    'log time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        #pickle.dump(_dumpMsg, self.file)
+    def store(self, forceStore=False):
+
+        if len(self.buffer) == self.bufferSize or forceStore:
+            for msg in self.buffer:
+                _dumpMsg = {'id': msg[0],
+                            'content': msg[1],
+                            'log time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                pickle.dump(_dumpMsg, self.file)
+            self.buffer = []
+            # emptying the buffer
 
     def get(self):
         return picle.load(self.file)
 
     def addSegment(self, segmentId, segmentProperty):
-        self.downloadedSegments[segmentId] = segmentProperty
+        self.downloadedSegments[segmentId] = None
+        self.buffer.append((segmentId,segmentProperty))
         self.printProgress()
 
     def printProgress(self):

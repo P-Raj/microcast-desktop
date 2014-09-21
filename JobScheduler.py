@@ -37,6 +37,7 @@ class JobScheduler:
         self.video_name = "music.mp4"
 
         self.peerLock = threading.Lock()
+        self.downloadLock = threading.Lock()
 
     def isSegmentAssigner(self):
 
@@ -175,9 +176,11 @@ class JobScheduler:
     def handleSegmentMessage(self, _message):
         Logging.logProcessOp(processId=self.environment.procId,
                              op="receivedSegments")
+        self.downloadLock.acquire()
         self.dataHandler.addSegment(_message.messageId,
                                     _message.content)
-        self.dataHandler.store(_message)
+        self.dataHandler.store()
+        self.downloadLock.release()
 
     """ </Functions to handle incoming microNC Messages> """
 
@@ -246,10 +249,15 @@ class JobScheduler:
         dnldThread.exit()
         adThread.exit()
 
+        self.dataHandler.store(forceStore=True)
+
     def runMicroDownload(self):
         self.microDownload()
 
     def download(self, segment):
+
+        self.downloadLock.acquire()
+        # to prevent multiple downloads from happenning together
 
         self.dwnldStartTime = datetime.now()
 
@@ -276,7 +284,7 @@ class JobScheduler:
         self.dataHandler.addSegment(segment.messageId,
                                     dataSeg)
 
-        #self.dataHandler.store(self.downloadingSegment)
+        self.dataHandler.store()
 
         self.isDownloading = False
         self.dwnldStartTime = None
@@ -301,6 +309,8 @@ class JobScheduler:
                              self.SegmentAssignProcId,
                              "sendConfirmation",
                              _response)
+
+        self.downloadLock.release()
 
     def downloadingOver(self):
         return not self.isDownloading
