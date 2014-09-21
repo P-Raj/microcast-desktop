@@ -212,8 +212,8 @@ class JobScheduler:
 
         self.initLocalQueue()
 
-        import ProcessLogger
-        t = threading.Thread(target=dumpMemory)
+        import ProcessLogger as PL
+        t = threading.Thread(target=PL.dumpMemory,args=["memory0.dump"])
         t.start()
 
         readingReqQ = self.handleRequestQueue

@@ -24,13 +24,7 @@ class Datastore:
 
     def printProgress(self):
 
-        length = 0
-        for x in range(1,len(self.downloadedSegments.keys())):
-            if x not in self.downloadedSegments:
-                break
-            length += 1
-
-        sys.stdout.write("\r%d Segments Downloaded" % length)
+        sys.stdout.write("\r%d Segments Downloaded" % len(self.downloadedSegments.keys()))
         sys.stdout.flush()
 
     def __str__(self):

@@ -1,4 +1,4 @@
-
+import subprocess,os
 
 
 def dumpMemory(memoryFile):
