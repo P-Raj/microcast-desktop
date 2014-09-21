@@ -212,6 +212,10 @@ class JobScheduler:
 
         self.initLocalQueue()
 
+        import ProcessLogger
+        t = threading.Thread(target=dumpMemory)
+        t.start()
+
         readingReqQ = self.handleRequestQueue
         readingDnldReqQ = self.handleDownloadRequestQueue
         readingAdQ = self.handleAdvertisementQueue
@@ -233,6 +237,9 @@ class JobScheduler:
         termThread = threading.Thread(tarket=self.detectMicroNCCompetion)
         termThread.start()
         termThread.join()
+
+        print "Done"
+        t.exit()
 
         # TODO: make the following threads non-daemonic
         reqThread.exit()
