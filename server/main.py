@@ -5,7 +5,7 @@ import os
 import json
 import math
 
-MaxSegmentSize = 10000
+MaxSegmentSize = 100000
 
 
 class FileHandler(BaseHTTPRequestHandler):

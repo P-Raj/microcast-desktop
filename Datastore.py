@@ -2,25 +2,33 @@ import pickle
 from datetime import datetime
 import time
 import sys
-
+import urllib
+import json
 
 class Datastore:
 
-    def __init__(self):
+    def __init__(self, filename, meta):
         self.downloadedSegments = {}
-        self.file = open("DataFile","w")
+	self.filename = filename
         self.bufferSize =  10 #number of segments downloaded before storing
         self.buffer = []
-        #self.file = open(name, mode)
+	self.meta = meta
+	self.createFile()
+
+    def createFile(self):
+	with open(self.filename,"w") as fp:
+		fp.write("X"*self.meta["size"])
+
 
     def store(self, forceStore=False):
 
         if len(self.buffer) == self.bufferSize or forceStore:
             for msg in self.buffer:
-                _dumpMsg = {'id': msg[0],
-                            'content': msg[1],
-                            'log time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                pickle.dump(_dumpMsg, self.file)
+		startFrom = self.meta["Segments"][str(msg[0])]
+		with open(self.filename,"a") as fp:
+			fp.seek(startFrom)
+			fp.write(msg[1])
+		
             self.buffer = []
             # emptying the buffer
 

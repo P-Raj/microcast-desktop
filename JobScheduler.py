@@ -27,7 +27,6 @@ class JobScheduler:
 
         self.segmentHandler = SegmentHandler()
         self.peers = Peers(self.environment.totalProcs)
-        self.dataHandler = Datastore.Datastore()
 
         self.isDownloading = False
         self.downloadingSegment = None
@@ -35,6 +34,11 @@ class JobScheduler:
 
         self.video_url = "http://192.168.21.20:8888/"
         self.video_name = "music.mp4"
+
+        self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
+        print "Metadata download complete"
+
+        self.dataHandler = Datastore.Datastore(self.video_name,self.segmentHandler.metadata)
 
         self.peerLock = threading.Lock()
         self.downloadLock = threading.Lock()
@@ -267,8 +271,8 @@ class JobScheduler:
                              message=segment)
 
         #TODO : Change the following line
-        segFilename = "music.mp4"
-        segStart = 0
+        segFilename = self.video_name
+        segStart = segment.messageId
         dataSeg = urllib.urlopen(self.video_url +
                                  urllib.urlencode(dict((("request", "True"),
                                                        ("file", segFilename),
@@ -421,8 +425,6 @@ class JobScheduler:
 
         assert(self.environment.procId == self.SegmentAssignProcId)
 
-        self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
-        print "Metadata download complete"
 
         self.peers.initPeers(self.environment.totalProcs - 1)
 
