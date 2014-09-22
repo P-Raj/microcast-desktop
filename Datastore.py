@@ -4,6 +4,7 @@ import time
 import sys
 import urllib
 import json
+from colorama import *
 
 class Datastore:
 
@@ -24,8 +25,8 @@ class Datastore:
 
         if len(self.buffer) == self.bufferSize or forceStore:
             for msg in self.buffer:
-                startFrom = self.meta["Segments"][str(msg[0])]
-                with open(self.filename,"a") as fp:
+                startFrom = self.meta[str(msg[0])]["segmentFrom"]
+                with open(self.filename,"r+b") as fp:
                     fp.seek(startFrom)
                     fp.write(msg[1])
             self.buffer = []
@@ -39,10 +40,21 @@ class Datastore:
         self.buffer.append((segmentId,segmentProperty))
         self.printProgress()
 
-    def printProgress(self):
+    def getProgressBar(self):
+	pBar = ''
+	for i in range(0,int(self.meta["numSegments"]),int(self.meta["numSegments"])/100):
+		if i in self.downloadedSegments:
+			pBar = pBar + Fore.GREEN + '#'
+		else:
+			pBar = pBar + Fore.RED + '#'
+	return pBar	
 
-        sys.stdout.write("\r%d Segments Downloaded" % len(self.downloadedSegments.keys()))
+
+    def printProgress(self):
+	percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
+        sys.stdout.write(Fore.BLUE + "\r%0.2f Complete | %s" % (percent*100,str(self.getProgressBar())))
         sys.stdout.flush()
+	sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
 
     def __str__(self):
         pcDwnld = float(len(self.downloadedSegments.keys()))
