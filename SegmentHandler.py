@@ -21,7 +21,9 @@ class SegmentHandler:
 
         self.metadata = dict((
             ("numSegments", len(meta["Segments"])),
-            ("size", meta["size"])))
+            ("size", meta["size"]),
+            ("filename", videoName))
+        )
 
         self.numSegs = self.metadata["numSegments"]
 

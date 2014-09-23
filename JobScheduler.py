@@ -32,7 +32,7 @@ class JobScheduler:
         self.downloadingSegment = None
         self.dwnldStartTime = None
 
-        self.video_url = "http://192.168.21.20:8888/"
+        self.video_url = "http://192.168.32.190:8888/"
         self.video_name = "music.mp4"
 
         self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
@@ -105,7 +105,7 @@ class JobScheduler:
             if not self.requestQueue.empty():
 
                     reqMessage = self.requestQueue.get()
-                    responseMsg = reqMessage.getResponse()
+                    responseMsg = reqMessage.getResponse(self.segmentHandler.metadata)
                     Logging.logProcessOp(processId=self.environment.procId,
                                          op="pop",
                                          depQueue="ReqQ",
@@ -241,7 +241,7 @@ class JobScheduler:
 
         chanThread.join()
 
-        termThread = threading.Thread(tarket=self.detectMicroNCCompetion)
+        termThread = threading.Thread(target=self.detectMicroNCCompetion)
         termThread.start()
         termThread.join()
 

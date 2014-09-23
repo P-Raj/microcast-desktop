@@ -14,7 +14,7 @@ class CpHandler:
         self.procId = procId
         self.totalProcs = totalProcs
         self.dependency = []
-        self.cpEnabled = False
+        self.cpEnabled = True
         self.cpTaken = False
         self.cpAlert = False
         self.cp = []
@@ -134,7 +134,8 @@ class CpHandler:
             self.dependency.append(depProcId)
 
     def _takeCheckpoint(self):
-
+	
+	print "take Checkpoint"
         startTime = datetime.datetime.now()
         session = dmtcp.checkpoint()
         self.cp.append((session,

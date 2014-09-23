@@ -1,6 +1,8 @@
 from time import gmtime, strftime, sleep
 
 
+#TODO : get the segmentmessage right
+
 class Message(object):
 
     numMsg = 0
@@ -70,11 +72,13 @@ class RequestMessage(Message):
     def isRequest(self):
         return True
 
-    def getResponse(self):
+    def getResponse(self, metaData):
         _response = SegmentMessage(self.receiver,
                                    self.messageId,
                                    self.sender)
-        _response.content = self.content
+        with open(metaData["filename"], "rb") as fp:
+            fp.seek(metaData[str(self.messageId)])
+            _response.content = fp.read(metadata["0"])
         return _response
 
     def __str__(self):

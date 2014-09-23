@@ -41,21 +41,22 @@ class Datastore:
         self.printProgress()
 
     def getProgressBar(self):
-	pBar = ''
-	for i in range(0,int(self.meta["numSegments"]),int(self.meta["numSegments"])/100):
-		if i in self.downloadedSegments:
-			pBar = pBar + Fore.GREEN + '#'
-		else:
-			pBar = pBar + Fore.RED + '#'
-	return pBar	
+        pBar = ''
+        for i in range(0,int(self.meta["numSegments"]),int(self.meta["numSegments"])/100):
+            if i in self.downloadedSegments:
+                pBar = pBar + Fore.GREEN + '#'
+            else:
+                pBar = pBar + Fore.RED + '#'
+        return pBar	
 
 
     def printProgress(self):
-	percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
+        percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
         sys.stdout.write(Fore.BLUE + "\r%0.2f Complete | %s" % (percent*100,str(self.getProgressBar())))
         sys.stdout.flush()
-	sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
-
+        sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
+        sys.stdout.flush()
+        
     def __str__(self):
         pcDwnld = float(len(self.downloadedSegments.keys()))
         return str(1)
