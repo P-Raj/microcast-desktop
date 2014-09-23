@@ -65,7 +65,7 @@ class Datastore:
 
     def downlodedAll(self):
         #print self.downloadedSegments.keys()
-        for x in range(self.totalSegs):
+        for x in range(self.meta["numSegments"]):
             if x not in self.downloadedSegments.keys():
                 return False
         return True
