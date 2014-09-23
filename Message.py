@@ -74,6 +74,7 @@ class RequestMessage(Message):
         _response = SegmentMessage(self.receiver,
                                    self.messageId,
                                    self.sender)
+        _response.content = self.content
         return _response
 
     def __str__(self):
