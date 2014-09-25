@@ -273,16 +273,14 @@ class JobScheduler:
         termThread.start()
         termThread.join()
 
-        print "Done"
         
         # TODO: make the following threads non-daemonic
         reqThread.join()
         dnldThread.join()
         adThread.join()
 
-    
         self.dataHandler.store(forceStore=True)
-
+	os._exit(1)
         #t.exit()
 
     def runMicroDownload(self):
