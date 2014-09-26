@@ -66,7 +66,7 @@ class Datastore:
 
     def __str__(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
-        return str(percent)
+        return str(percent*100)
 
     def getSegment(self, segmentId):
         self.downloadedSegments.get(segmentId, None)

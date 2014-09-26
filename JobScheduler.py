@@ -220,7 +220,7 @@ class JobScheduler:
     def detectMicroNCCompetion(self):
 
         while True:
-            if float(str(self.dataHandler)) >= 90:
+            if float(str(self.dataHandler)) == 100:
                 # all segments have been downloaded
                 completionMsg = Message.DownloadCompleteMessage(
                     senderId=self.environment.procId,
@@ -230,12 +230,11 @@ class JobScheduler:
                                       completionMsg)
                 self.terminate = True
                 print "Terminate"
-
-            """
-            if self.isMicroNCComplete():
-                time.sleep(20)
+            
+                while not self.isMicroNCComplete():
+                    time.sleep(2)
                 return
-            """
+            
 
     def microNC(self):
 
@@ -266,10 +265,8 @@ class JobScheduler:
         adThread = threading.Thread(target=readingAdQ)
         adThread.start()
 
-        print "Waiting for channel thread to complete"
         chanThread.join()
-        print "Channel thread complete"
-
+        
 
         
         termThread = threading.Thread(target=self.detectMicroNCCompetion)
@@ -283,9 +280,7 @@ class JobScheduler:
         dnldThread.join()
         adThread.join()
 
-        termThread.join()
-
-
+    
         self.dataHandler.store(forceStore=True)
 
         #t.exit()
