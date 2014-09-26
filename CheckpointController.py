@@ -5,35 +5,69 @@ import resource
 import random
 import Logging
 from Message import *
-
+import sys
 
 class CpHandler:
 
-    def __init__(self, procId, totalProcs):
+    def __init__(self, procId, totalProcs , inChannel):
 
         self.procId = procId
         self.totalProcs = totalProcs
+
         self.dependency = []
+
         self.cpEnabled = False
         self.cpTaken = False
         self.cpAlert = False
-        self.cp = []
+        self.cp = None
         self.confirmReceived = {}
         self.BQ = [Queue.Queue() for _ in range(self.totalProcs)]
 
+        self.delayCheckpoint = False
+        self.delayCheckpointTime = 10 #seconds
+
     def _union(self, listA, listB):
         return list(set(listA+listB))
+
+    def _takeCheckpoint(self):
+
+        if not self.cpTaken:
+
+            startTime = datetime.datetime.now()
+            session = dmtcp.checkpoint()
+            self.cp = (session, datetime.datetime.now()-startTime,
+                            resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+
+            self.cpTaken = True
+
+    def handleDownloadComplete(self):
+
+        if self.cpAlert and not self.cpTaken:
+            self.cpTimer.cancel()
+            self._takeCheckpoint()
 
     def handleRequests(self, reqMsg):
 
         assert(isinstance(reqMsg, CheckpointMessage))
 
         if isinstance(reqMsg, CheckpointReqMessage):
+
+            if self.cpTaken:
+                return
+
             cpReqMsgs = self._handleCpRequest(reqMsg)
+
+            cpTimer = threading.Timer(self.delayCheckpointTime, self._takeCheckpoint)
+            cpTimer.start()
+
             return cpReqMsgs
 
         elif isinstance(reqMsg, CheckpointConfirmMessage):
+
+            assert(self.isCheckpointInitiator())
+
             self._handleCpConfirmation(reqMsg)
+
             return None
 
         else:
@@ -61,9 +95,9 @@ class CpHandler:
                 CheckpointReqMessage(self.procId,
                                      self.procId,
                                      nrecs,
-                                     self.dependency))
-            self.confirmReceived[nrecs] = False
-
+                                     self.dependency,
+                                     1.00))
+        self.recWeights = 0.00
         return newCpReqs
 
     def storeCp(self):
@@ -72,30 +106,23 @@ class CpHandler:
             with open(str(ickpt)+".checkpoint","wb") as fp:
                 fp.write(ckpt)
 
-    def getCp(self):
+      
 
-        maxCps = 100
-        cps = []
-        for ickpt in range(maxCps):
-            with open(str(ickpt)+".checkpoint","rb") as fp:
-                cps.append(fp.read())
-        return cps
-
-    def restore(self, cp=None):
-        lastCp = self.getCp()[-1]
-        dmtcp.restore(lastCp)
+    def informDownloadComplete(self):
+        pass
 
     def _handleCpRequest(self, cpReq):
 
         self.cpAlert = True
-        self.cpTaken = True
 
-        self._takeCheckpoint()
+        cpRqWeight = cpReq.weight
 
         newCpReqs = []
 
         newDeps = (x for x in self.dependency
                    if x not in cpReq.dependency)
+
+        myWeight = cpRqWeight/(len(newDeps)+1)
 
         for nrecs in newDeps:
             newCpReqs.append(
@@ -103,44 +130,35 @@ class CpHandler:
                     self.procId,
                     cpReq.initiatorId,
                     nrecs,
-                    self._union(self.dependency, cpReq.dependency)))
+                    self._union(self.dependency, cpReq.dependency),
+                    myWeight)
+                )
 
         newCpReqs.append(
             CheckpointConfirmMessage(
                 self.procId,
                 cpReq.initiatorId,
-                newDeps))
+                newDeps,
+                myWeight))
 
         return newCpReqs
 
     def _handleCpConfirmation(self, cpCnf):
 
-        assert(cpCnf.sender in self.confirmReceived)
 
-        self.confirmReceived[cpCnf.sender] = True
+        self.recWeights += cpCnf.weight
 
-        for proc in cpCnf.reqSentto:
-            self.confirmReceived[cpCnf.sender] = self.confirmReceived.get(
-                cpCnf.sender,
-                False)
 
-    def completeCheckpointing(self):
+        if self.recWeights == 1:
+            self.storeCp()
+            self.recConfirmation.append(cpCnf.sender)
+            print "Checkpoint Initiator: All dep processes have taken the checkpoint"
 
-        return self.cpTaken and all(self.confirmReceived.values())
-
+    
     def _updateDependency(self, depProcId):
 
         if depProcId not in self.dependency:
             self.dependency.append(depProcId)
-
-    def _takeCheckpoint(self):
-	
-	print "take Checkpoint"
-        startTime = datetime.datetime.now()
-        session = dmtcp.checkpoint()
-        self.cp.append((session,
-                        datetime.datetime.now()-startTime,
-                        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
     def messageConsumptionAllowed(self, message):
 

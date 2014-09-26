@@ -45,6 +45,7 @@ class JobScheduler:
         self.peerLock = threading.Lock()
         self.downloadLock = threading.Lock()
 
+
     def isSegmentAssigner(self):
 
         return self.environment.procId == self.SegmentAssignProcId
