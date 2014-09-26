@@ -112,10 +112,9 @@ class CpHandler:
 
     def storeCp(self):
 
-	print "storing cp"
-        for ickpt,ckp in enumerate(self.cp):
-            with open(str(ickpt)+".checkpoint","wb") as fp:
-                fp.write(ckpt)
+        print "storing cp"
+        with open(str("me")+".checkpoint","wb") as fp:
+            fp.write(self.cp)
 
       
 
@@ -138,7 +137,7 @@ class CpHandler:
                     self.procId,
                     cpReq.initiatorId,
                     nrecs,
-                    self._union(self.dependency, cpReq.dependency),
+                    self._union(self.dependency, cpReq.dependency + [self.procId]),
                     myWeight)
                 )
 
