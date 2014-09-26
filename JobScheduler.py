@@ -93,11 +93,11 @@ class JobScheduler:
         while True:
 
             if self.terminate:
-                print "Terminating Downloa req Q"
                 if downloadThread and downloadThread.isAlive():
                     print "Waiting for download to complete"
                     downloadThread.join()
-                    break
+                    print "Terminating Downloa req Q"
+                break
 
             if not self.downloadRequests.empty() and not self.isDownloading:
 
