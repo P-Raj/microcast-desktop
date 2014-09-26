@@ -244,16 +244,17 @@ class JobScheduler:
 
         self.initLocalQueue()
 
-        """
+        
         import ProcessLogger as PL
         t = threading.Thread(target=PL.dumpMemory,args=["memory0.dump"])
         t.start()
-        """
+        
 
         readingReqQ = self.handleRequestQueue
         readingDnldReqQ = self.handleDownloadRequestQueue
         readingAdQ = self.handleAdvertisementQueue
 
+        print "herE"
         chanThread = threading.Thread(target=self.handleIncomingChannelMNc)
         chanThread.start()
 
@@ -263,6 +264,7 @@ class JobScheduler:
         dnldThread = threading.Thread(target=readingDnldReqQ)
         dnldThread.start()
 
+        print "here"
         adThread = threading.Thread(target=readingAdQ)
         adThread.start()
 
@@ -281,7 +283,8 @@ class JobScheduler:
         adThread.join()
 
         self.dataHandler.store(forceStore=True)
-	os._exit(1)
+
+        os._exit(1)
         #t.exit()
 
     def runMicroDownload(self):
