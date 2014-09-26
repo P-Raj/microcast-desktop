@@ -163,7 +163,7 @@ class CheckpointReqMessage(CheckpointMessage):
         self.dependency = depVector
 
     def __str__(self):
-        return "CkptReqMsg" + str((self.initiatorId))
+        return "CkptReqMsg" + str((self.initiatorId)) + "Weight:" + str(self.weight)
 
 
 class CheckpointConfirmMessage(CheckpointMessage):
@@ -173,4 +173,4 @@ class CheckpointConfirmMessage(CheckpointMessage):
         self.reqSentTo = reqSentTo
 
     def __str__(self):
-        return "CkptCnfMsg" + str(self.sender)
+        return "CkptCnfMsg" + str(self.sender) + "Weight:" + str(self.weight)
