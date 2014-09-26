@@ -52,7 +52,7 @@ class CpHandler:
 
         assert(isinstance(reqMsg, CheckpointMessage))
 
-	print str(reqMsg), " Received"
+        print str(reqMsg), " Received"
 
         if isinstance(reqMsg, CheckpointReqMessage):
 
@@ -93,10 +93,10 @@ class CpHandler:
 
         self.cpAlert = True
 
-	print "initiated Checkpointig"
+        print "initiated Checkpointig"
         print "setting alert"
         self._takeCheckpoint()
-	print "taken"
+        print "taken"
 
         newCpReqs = []
 
@@ -105,7 +105,7 @@ class CpHandler:
                 CheckpointReqMessage(self.procId,
                                      self.procId,
                                      nrecs,
-                                     self.dependency,
+                                     self.dependency +[self.procId],
                                      1.00))
         self.recWeights = 0.00
         return newCpReqs
