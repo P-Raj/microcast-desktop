@@ -19,7 +19,7 @@ class JobScheduler:
 
     def __init__(self, environment):
 
-        self.MAX_BACKLOG = 5
+        self.MAX_BACKLOG = 4
 
         self.environment = environment
 
@@ -34,7 +34,7 @@ class JobScheduler:
         self.downloadingSegment = None
         self.dwnldStartTime = None
 
-        self.video_url = "http://192.168.32.190:8888/"
+        self.video_url = "http://192.168.21.20:8888/"
         self.video_name = "music.mp4"
 
         self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
@@ -229,6 +229,7 @@ class JobScheduler:
                 self.environment.send(self.SegmentAssignProcId,
                                       completionMsg)
                 self.terminate = True
+                print "Terminate"
 
             """
             if self.isMicroNCComplete():
@@ -439,13 +440,11 @@ class JobScheduler:
                                                  _,
                                                  "terminateSignal",
                                                  terminationMsg)
-                    print "Terminating in Channel"
                     break
 
     def handleOutgoingChannelMD(self):
 
         while not self.segmentHandler.allAssigned():
-
             self.peerLock.acquire()
             peerId = self.peers.leastBusyPeer()
             peerBackLog = self.peers.getBackLog(peerId)
@@ -474,3 +473,7 @@ class JobScheduler:
 
         tIn.join()
         tOut.join()
+
+        print "microDownload Complete"
+
+        os._exit(1)

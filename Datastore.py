@@ -22,7 +22,7 @@ class Datastore:
             fp.write("X"*self.meta["size"])
 
 
-    def store(self, forceStore=False):
+    def store(self, forceStore=True):
 
         if len(self.buffer) == self.bufferSize or forceStore:
             for msg in self.buffer:

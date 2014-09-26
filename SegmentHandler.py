@@ -14,6 +14,8 @@ class SegmentHandler:
         self.segmentAssignListLock = threading.Lock()
         self.downloadedList = []
 
+        self.ptr = 0
+
     def downloadMetadata(self, url, videoName):
         # Static data as of now
         url = url + urllib.urlencode({'init': 'True', 'file': videoName})
@@ -62,9 +64,11 @@ class SegmentHandler:
     def getNextUnassigned(self):
         # used only by microDownload
         if not self.allAssigned():
-            for i,x in enumerate(self.segmentAssignList):
-                if not x:
-                    return i
+            self.segmentAssignListLock.acquire()
+            i = self.ptr
+            self.ptr += 1
+            self.segmentAssignListLock.release()
+            return i
             #return random.choice(
             #    [i for i, x in enumerate(self.segmentAssignList) if not x])
         return None

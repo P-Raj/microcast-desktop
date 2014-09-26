@@ -16,6 +16,10 @@ class Communicator:
 
         self.totalProcs = cmdArgs["numProcs"]
         self.peers = cmdArgs["peers"]
+        
+        self.terminate = False
+        self.readingThreads = []
+	self.readLock = threading.Lock()
 
         self.inPeers = [(x[0], int(x[1])) for x in self.peers]
         self.outPeers = [(x[0], int(x[2])) for x in self.peers]
@@ -50,8 +54,19 @@ class Communicator:
 
     def close(self):
 
+        print "closing the communicaor object"
+        
+        self.readLock.acquire()
+        self.terminate = True
+        self.readLock.release()
+        
+        for readers in self.readingThreads:
+            readers.join()
+        print "Closed Reading threads"
+
         for openSockets in self.outChan.values() + self.inChan.values():
             openSockets.shutdown(socket.SHUT_RDWR)
+        print "Closed Open Sockets"
 
     def setChannels(self):
 
@@ -109,8 +124,8 @@ class Communicator:
             soc.bind(('', self.meComplete[1]))
 
             # Ipv4 with TCP connection
-            #soc.settimeout(5.0)
-            soc.setblocking(1)
+            soc.settimeout(5.0)
+            #soc.setblocking(1)
 
             try:
                 soc.connect((peerIp, peerRecvPort))
@@ -150,8 +165,8 @@ class Communicator:
         print "[IN] connections established"
 
         for soc in self.inChan.values():
-            t = threading.Thread(target=self.readlines, args=[soc])
-            t.start()
+            self.readingThreads.append(threading.Thread(target=self.readlines, args=[soc]))
+            self.readingThreads[-1].start()
 
     def getMyId(self):
 
@@ -161,7 +176,6 @@ class Communicator:
 
         self.sendLock.acquire()
         message = pickle.dumps(message)
-
         #sending length
         message_length = len(message)
         self.outChan[dest].send('<MESSAGELENGTH>%s</MESSAGELENGTH>'
@@ -226,23 +240,26 @@ class Communicator:
 
         while True:
 
-            msg = ''
+            self.readLock.acquire()
 
-            opTag = '<MESSAGELENGTH>'
-            clTag = '</MESSAGELENGTH>'
+            if self.terminate:
+                break
 
-            while not all(tag in msg for tag in (opTag, clTag)):
-                msg = sock.recv(1024)
+            msg = '' # initialize outside since otherwise remiander of previous message would be lost
+            
+            opTag = '<MESSAGELENGTH>' # no need to repeat this in each iteration
+            clTag = '</MESSAGELENGTH>' # no need to repeat this in each iteration
 
-            msglen = int(msg.split(clTag)[0].split(opTag)[1])
-            msg = msg.split(clTag)[1]
+            while True:
+                while not all(tag in msg for tag in (opTag, clTag)):
+                    msg += sock.recv(1024) # += rather than =
+                msglen = int(msg.split(clTag)[0].split(opTag)[1])
+                msg = msg.split(clTag, 1)[1] # split just once, starting from the left
+                while len(msg) < msglen:
+                    msg += sock.recv(msglen-len(msg))
+                self.rec.put(pickle.loads(msg[:msglen])) # handle just one message
+                msg = msg[msglen:] # prepare for handling future messages
 
-            while len(msg) < msglen:
-                msg += sock.recv(msglen-len(msg))
+            self.readLock.release()
 
-            try:
-                self.rec.put(pickle.loads(msg))
-            except:
-                print "Some segments are lost"
-        print "Reading complete"
         return

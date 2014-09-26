@@ -26,7 +26,7 @@ def writeLog(string):
 		op = op + "(" + string.get("queue","None") + "," + str(string.get("message","None")) + ")"
 	else:
 		raise Exception("Uidentified log")
-	#print op
+	print op
 
 
 class File:

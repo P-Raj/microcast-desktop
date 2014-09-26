@@ -83,4 +83,3 @@ if processId == initiator:
 else:
     procJobScheduler.runMicroNC()
 
-environment.setUpBarrier()
