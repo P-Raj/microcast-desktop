@@ -57,12 +57,10 @@ class Datastore:
 
     def printProgress(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])
-        """
         sys.stdout.write("\r" + Fore.BLUE + "%0.2f Complete | %s" % (percent*100,str(self.getProgressBar())))
         sys.stdout.flush()
         sys.stdout.write(Fore.RESET+Back.RESET+Style.RESET_ALL)
         sys.stdout.flush()
-        """
 
     def __str__(self):
         percent = len(self.downloadedSegments.keys())/ float(self.meta["numSegments"])

@@ -150,16 +150,18 @@ class TerminateMessage(Message):
 
 class CheckpointMessage(Message):
 
-    def __init__(self, senderId, initiatorId, receiverId):
+    def __init__(self, senderId, initiatorId, receiverId , weight):
         Message.__init__(self, senderId, initiatorId, receiverId)
         self.initiatorId = initiatorId
+        self.weight = weight
 
 
 class CheckpointReqMessage(CheckpointMessage):
 
-    def __init__(self, senderId, initiatorId, receiverId, depVector):
+    def __init__(self, senderId, initiatorId, receiverId, depVector, weight):
         CheckpointMessage.__init__(self, senderId, initiatorId, receiverId)
         self.dependency = depVector
+        self.weight = weight
 
     def __str__(self):
         return "CkptReqMsg" + str((self.initiatorId))
@@ -167,9 +169,10 @@ class CheckpointReqMessage(CheckpointMessage):
 
 class CheckpointConfirmMessage(CheckpointMessage):
 
-    def __init__(self, senderId, receiverId, reqSentTo):
+    def __init__(self, senderId, receiverId, reqSentTo, weight):
         CheckpointMessage.__init__(self, senderId, None, receiverId)
         self.reqSentTo = reqSentTo
+        self.weight = weight
 
     def __str__(self):
         return "CkptCnfMsg" + str(self.sender)

@@ -19,7 +19,7 @@ class Communicator:
         
         self.terminate = False
         self.readingThreads = []
-	self.readLock = threading.Lock()
+        self.readLock = threading.Lock()
 
         self.inPeers = [(x[0], int(x[1])) for x in self.peers]
         self.outPeers = [(x[0], int(x[2])) for x in self.peers]
@@ -28,6 +28,7 @@ class Communicator:
         self.printChannels()
 
         self.sendLock = threading.Lock()
+        self.checkpointLock = threading.Lock()
 
         assert(len(self.connections.keys()) == len(self.peers)-1)
 
@@ -195,10 +196,19 @@ class Communicator:
         message = self.rec.get()
 
         if isinstance(message, CheckpointMessage):
-            self.ckptCntrl.handleRequests(message)
+            self.checkpointLock.acquire()
+            reqs = self.ckptCntrl.handleRequests(message)
+            if reqs:
+                for req in reqs:
+                    self._send(req, dest=req.receiver)
+            self.checkpointLock.release()
             return None
 
-        if self.ckptCntrl.messageConsumptionAllowed(message):
+        self.checkpointLock.acquire()
+        messageConsumptionAllowed = self.ckptCntrl.messageConsumptionAllowed(message)
+        self.checkpointLock.release()
+
+        if messageConsumptionAllowed:
             #consume the message
             return message
 
@@ -207,14 +217,18 @@ class Communicator:
     def trySendingCp(self):
 
         if self.ckptCntrl.checkpointInitAllowed():
+            self.checkpointLock.acquire()
             for msg in self.ckptCntrl.checkpointInit():
                 self._send(msg, dest=msg.receiver)
+            self.checkpointLock.release()
 
     def send(self, toProc, message):
 
         self.trySendingCp()
         message.setBB(self.ckptCntrl.cpEnabled and self.ckptCntrl.cpTaken)
+        self.checkpointLock.acquire()
         self._send(message, dest=toProc)
+        self.checkpointLock.release()
 
     def sendToRandom(self, message):
 
@@ -226,15 +240,6 @@ class Communicator:
             [x for x in self.inChan.values()], [], [])
         return readable
 
-    def nonBlockingReceive(self):
-
-        self.trySendingCp()
-
-        nonEmptyChannels = self.getNonEmptyChannels()
-        if nonEmptyChannels:
-            return self._receive(choice(nonEmptyChannels))
-
-        return None
 
     def readlines(self, sock):
 

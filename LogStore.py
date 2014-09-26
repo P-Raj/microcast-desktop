@@ -1,10 +1,11 @@
 import LogViewer
 import os
+from Terminal import Monitor
 
 terminalOpEnabled = True
 fileOpEnabled = True
 fileOpFolder = "output/"
-
+terminal = Monitor(1)
 
 
 def initRunHistory(procId):
@@ -26,7 +27,7 @@ def writeLog(string):
 		op = op + "(" + string.get("queue","None") + "," + str(string.get("message","None")) + ")"
 	else:
 		raise Exception("Uidentified log")
-	print op
+	terminal.write(op + "\n")
 
 
 class File:
