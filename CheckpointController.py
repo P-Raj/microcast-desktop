@@ -6,17 +6,19 @@ import random
 import Logging
 from Message import *
 import sys
+import threading
+import os
 
 class CpHandler:
 
-    def __init__(self, procId, totalProcs , inChannel):
+    def __init__(self, procId, totalProcs ):
 
         self.procId = procId
         self.totalProcs = totalProcs
 
         self.dependency = []
 
-        self.cpEnabled = False
+        self.cpEnabled = True
         self.cpTaken = False
         self.cpAlert = False
         self.cp = None
@@ -39,6 +41,8 @@ class CpHandler:
                             resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
             self.cpTaken = True
+
+            os._exit(1)
 
     def handleDownloadComplete(self):
 
@@ -73,9 +77,13 @@ class CpHandler:
         else:
             raise Exception("Unknown checkpoint message")
 
+    def isCheckpointInitiator(self):
+
+        return self.procId == 0
+
     def checkpointInitAllowed(self):
 
-        if self.procId == 0 and random.randrange(10) == 0 and \
+        if self.isCheckpointInitiator() and random.randrange(10) == 0 and \
            self.cpEnabled and not self.cpAlert and len(self.dependency) > 0:
             return True
 
@@ -108,9 +116,6 @@ class CpHandler:
 
       
 
-    def informDownloadComplete(self):
-        pass
-
     def _handleCpRequest(self, cpReq):
 
         self.cpAlert = True
@@ -119,8 +124,8 @@ class CpHandler:
 
         newCpReqs = []
 
-        newDeps = (x for x in self.dependency
-                   if x not in cpReq.dependency)
+        newDeps = [x for x in self.dependency
+                   if x not in cpReq.dependency]
 
         myWeight = cpRqWeight/(len(newDeps)+1)
 
