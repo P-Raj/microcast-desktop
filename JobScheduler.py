@@ -34,7 +34,7 @@ class JobScheduler:
         self.downloadingSegment = None
         self.dwnldStartTime = None
 
-        self.video_url = "http://192.168.21.20:8888/"
+        self.video_url = "http://192.168.32.190:8888/"
         self.video_name = "music.mp4"
 
         self.segmentHandler.downloadMetadata(self.video_url, self.video_name)
@@ -301,7 +301,7 @@ class JobScheduler:
 
         #TODO : Change the following line
         segFilename = self.video_name
-        segStart = segment.messageId
+        segStart = segment.messageId*100000
         dataSeg = urllib.urlopen(self.video_url +
                                  urllib.urlencode(dict((("request", "True"),
                                                        ("file", segFilename),
