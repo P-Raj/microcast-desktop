@@ -37,9 +37,7 @@ class CpHandler:
 
             startTime = datetime.datetime.now()
             session = dmtcp.checkpoint()
-            self.cp = (session, datetime.datetime.now()-startTime,
-                            resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-
+            self.cp = session
             self.cpTaken = True
 
     def handleDownloadComplete(self):
