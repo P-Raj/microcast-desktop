@@ -42,8 +42,6 @@ class CpHandler:
 
             self.cpTaken = True
 
-            os._exit(1)
-
     def handleDownloadComplete(self):
 
         if self.cpAlert and not self.cpTaken:
@@ -53,6 +51,8 @@ class CpHandler:
     def handleRequests(self, reqMsg):
 
         assert(isinstance(reqMsg, CheckpointMessage))
+
+	print str(reqMsg), " Received"
 
         if isinstance(reqMsg, CheckpointReqMessage):
 
@@ -92,9 +92,11 @@ class CpHandler:
     def checkpointInit(self):
 
         self.cpAlert = True
-        self.cpTaken = True
 
+	print "initiated Checkpointig"
+        print "setting alert"
         self._takeCheckpoint()
+	print "taken"
 
         newCpReqs = []
 
@@ -110,6 +112,7 @@ class CpHandler:
 
     def storeCp(self):
 
+	print "storing cp"
         for ickpt,ckp in enumerate(self.cp):
             with open(str(ickpt)+".checkpoint","wb") as fp:
                 fp.write(ckpt)
@@ -125,7 +128,7 @@ class CpHandler:
         newCpReqs = []
 
         newDeps = [x for x in self.dependency
-                   if x not in cpReq.dependency]
+                   if x not in cpReq.dependency and x!=self.procId]
 
         myWeight = cpRqWeight/(len(newDeps)+1)
 
@@ -145,6 +148,8 @@ class CpHandler:
                 cpReq.initiatorId,
                 newDeps,
                 myWeight))
+
+        print "Checkpoint message rceived ...."
 
         return newCpReqs
 
